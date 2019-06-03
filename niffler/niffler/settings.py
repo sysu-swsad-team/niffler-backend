@@ -42,6 +42,11 @@ INSTALLED_APPS = [
 ]
 
 REST_FRAMEWORK = {
+    # 使用 Django 的标准 `django.contrib.auth` 权限，
+    # 或允许未经身份验证的用户进行只读访问。
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10
 }
