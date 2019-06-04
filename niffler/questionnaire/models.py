@@ -41,7 +41,7 @@ Task statuses:
      QUOTA FULL : Attain to participant_quota
        UNDERWAY : In progress
 
-PAERICIPANTSHIP statuses:
+Participantship statuses:
       CANCELLED : Cancelled by participant
       COMMENTED : Has been commented by its task issuer
       CONFIRMED : Has been confirmed by its task issuer
