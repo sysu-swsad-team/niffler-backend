@@ -1,11 +1,76 @@
+"""
+Created by [16340286](https://github.com/Ernie1).
+
+TODO not here:
+ * When create task,
+   available_balance should be more than fee * participant_quota.
+   
+ * When determine task's fee,
+   participant_quota should also be determined but not vice versa.
+ 
+ * Task's due_date is only w.r.t. participantship's participanted_date,
+   so participantship's confirmed_date is unrestricted.
+ 
+ * When create a participantship,
+   task issuer's balance is deducted 1 * fee.
+ 
+ * When task cancelled, task issuer will not be refunded
+   and affect corresponding participantship,
+   participant whose _status == 'UNDERWAY' will be paid.
+   
+ * Task can be claimed when status == 'UNDERWAY' and
+   claimer is not issuer.
+   
+ * When task invalid, task issuer will not be refunded
+   and cause corresponding participantship invalid,
+   participant whose _status == 'UNDERWAY' will NOT be paid.
+   
+ * Only participant has permission to modify _status
+   from 'UNDERWAY' to 'CANCELLED' and task issuer is refunded 1 * fee.
+   
+ * Only task issuer has permission to modify _status
+   from 'UNDERWAY' to 'CONFIRMED' and participant is paid 1 * fee.
+   
+ * Only task issuer has permission to comment
+   when _status == 'CONFIRMED'.
+
+Task statuses:
+        INVALID : Has certain number of claimers
+      CANCELLED : Cancelled by issuer
+         CLOSED : due_date expires
+     QUOTA FULL : Attain to participant_quota
+       UNDERWAY : In progress
+
+PAERICIPANTSHIP statuses:
+      CANCELLED : Cancelled by participant
+      COMMENTED : Has been commented by its task issuer
+      CONFIRMED : Has been confirmed by its task issuer
+   TASK INVALID : Its task has certain number of claimers
+ TASK CANCELLED : Its task has been cancelled
+       UNDERWAY : In progress
+"""
+
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
+
+CLAIMER_THRESHOLD = 10
+
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     phone = models.CharField(max_length=50, blank=True)
     balance = models.IntegerField(blank=True, default=10000)
     avatar = models.ImageField(upload_to='avatar/%Y/%m/%d/', blank=True)
+     
+    @property
+    def available_balance(self):
+        budget = 0
+        for t in self.user.issued_tasks.all():
+            if t.status == 'UNDERWAY' and t.fee:
+                budget += t.fee * t.remaining_quota
+        return self.balance - budget
+
 
 class Task(models.Model):
     title = models.CharField(max_length=150)
@@ -21,20 +86,40 @@ class Task(models.Model):
         related_name='participanted_tasks', through='Participantship')
     claimers = models.ManyToManyField(User,
                                       related_name='claimed_tasks')
-    self_cancelled = models.BooleanField(default=False)
+    cancelled = models.BooleanField(default=False)
     
-    # TODO
+    @property
+    def valid_participant_amount(self):
+        return self.participantship_set.filter(
+                models.Q(_status='UNDERWAY') | \
+                models.Q(_status='CONFIRMED') | \
+                models.Q(_status='COMMENTED')).count()
+    
+    @property
+    def remaining_quota(self):
+        if self.participant_quota:
+            return max(self.participant_quota - \
+                       self.valid_participant_amount, 0)
+        return True
+    
     @property
     def status(self):
-        """
-          UNDERWAY 进行中
-          CANCELLED 发起者/参与者取消，发起者也会触发参与者
-          REJECTED 发起者/参与者违规，发起者也会触发参与者
-          FINISHED 仅用于发起者确认参与者完成
-          COMMENTED 仅用于发起者评价参与者
-        """
+        if self.claimers.count() >= CLAIMER_THRESHOLD:
+            return 'INVALID'
+        if self.cancelled:
+            return 'CANCELLED'
+        if self.due_date and timezone.now() >= self.due_date:
+            return 'CLOSED'
+        if self.remaining_quota == 0:
+            return 'QUOTA FULL'
         return 'UNDERWAY'
-        
+
+
+PARTICIPANTSHIP_STATUS = [
+    ('UNDERWAY', 'UNDERWAY'),
+    ('CANCELLED', 'CANCELLED'),
+    ('CONFIRMED', 'CONFIRMED'),
+]
 
 class Participantship(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -43,15 +128,24 @@ class Participantship(models.Model):
     description = models.TextField(blank=True)
     poll = models.FileField(upload_to='participanted_poll/%Y/%m/%d/',
                             blank=True)
-    finished_date = models.DateTimeField(blank=True, null=True)
+    confirmed_date = models.DateTimeField(blank=True, null=True)
     rate = models.IntegerField(blank=True, null=True)
     comment = models.TextField(blank=True)
-    self_cancelled = models.BooleanField(default=False)
+    _status = models.CharField(choices=PARTICIPANTSHIP_STATUS,
+                blank=True, default='UNDERWAY', max_length=100)
     
-    # TODO
     @property
     def status(self):
+        if self._status == 'CANCELLED':
+            return 'CANCELLED'
+        if self._status == 'CONFIRMED':
+            return 'COMMENTED' if self.comment else 'CONFIRMED'
+        if self.task.status == 'INVALID':
+            return 'TASK INVALID'
+        if self.task.status == 'CANCELLED':
+            return 'TASK CANCELLED'
         return 'UNDERWAY'
+
 
 class Tag(models.Model):
     name = models.CharField(max_length=150)
