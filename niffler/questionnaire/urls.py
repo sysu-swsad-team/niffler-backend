@@ -13,8 +13,11 @@ router.register('tag', views.TagViewSet)
 
 # 使用自动 URL 路由连接我们的 API。
 urlpatterns = [
+    path('', views.schema_view),
     path('api-auth/', include('rest_framework.urls',
                                namespace='rest_framework')),
     # path('login/', obtain_jwt_token),
+    path('login/', views.user_login),
+    path('logout/', views.user_logout),
     path('', include(router.urls)),
 ]

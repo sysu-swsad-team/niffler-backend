@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_filters',
     'rest_framework',
+    'rest_framework_swagger',
     'questionnaire.apps.QuestionnaireConfig',
 ]
 
@@ -65,6 +66,7 @@ REST_FRAMEWORK = {
 #     'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=20),
 #     'JWT_AUTH_HEADER_PREFIX': 'JWT',
 # }
+AUTHENTICATION_BACKENDS = ['questionnaire.custom.EmailOrUsernameModelBackend']
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
