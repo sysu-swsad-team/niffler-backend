@@ -24,6 +24,7 @@ class TaskSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Task
         fields = '__all__'
+        read_on_fields = ('issuer', 'claimers', 'cancelled')
 
 class ParticipantshipSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
