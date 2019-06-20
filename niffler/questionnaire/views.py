@@ -107,7 +107,6 @@ def user_login(request):
 
 #  用户登出
 @csrf_exempt 
-@login_required
 def user_logout(request):
     try:
         del request.session['user_id']
@@ -129,6 +128,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
 
+
 class TaskViewSet(viewsets.ModelViewSet):
     """
     允许 Task 查看或编辑的 API 端点。
@@ -139,14 +139,40 @@ class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer     
 
-    # def create(self, request):
+    def create(self, request):
+        if request.method == 'POST':
+            user = request.user
+            available_balance = Profile.objects.get(user=user).available_balance
+            title = request.POST['title']
+            description = request.POST['description']
+            poll = request.FILES['poll']
+            fee = int(request.POST['fee'])
+            participant_quota = int(request.POST['participant_quota'])
+            due_date = request.POST['due_date']
 
+            if available_balance < fee * participant_quota:
+                return HttpResponse("Not enough balance.")
+
+            task = Task.objects.create(
+                issuer=user,
+                title=title,
+                description=description,
+                poll=poll,
+                fee=fee,
+                participant_quota=participant_quota,
+                due_date=due_date
+            )
+            task.save()
+            return HttpResponse("Create a new task.")
+            
+
+    # def update(self, request, pk=None):
+    # 
 
     # def retrieve(self, request, pk=None):
     # pass
 
-    # def update(self, request, pk=None):
-    # pass
+   
 
     # def partial_update(self, request, pk=None):
     # pass
@@ -168,7 +194,44 @@ class TaskViewSet(viewsets.ModelViewSet):
 class ParticipantshipViewSet(viewsets.ModelViewSet):
     queryset = Participantship.objects.all()
     serializer_class = ParticipantshipSerializer
- 
+    
+    authentication_classes = (SessionAuthentication, BasicAuthentication)
+    permission_classes = (IsAuthenticated,)
+
+    def create(self, request):
+        if request.method == 'POST':
+            user = request.user
+            task_id = request.POST['task_id']
+            task = Task.objects.get(pk=task_id)
+            task_status = task.status
+
+            if task_status == 'INVALID':
+                return HttpResponse("TASK INVALID")
+            elif task_status == 'CANCELLED':
+                return HttpResponse("TASK CANCELLED")
+            elif task_status == 'CLOSED':
+                return HttpResponse("TASK CLOSED")
+            elif task_status == 'QUOTA FULL':
+                return HttpResponse("TASK QUOTA FULL")
+            
+            description = task.description
+            poll = request.FILES['poll']
+            rate = int(request.POST['rate'])
+            comment = request.POST['comment']
+
+            participantship = Participantship.objects.create(
+                user=user,
+                task=task,
+                description=description,
+                poll=poll,
+                rate=rate,
+                comment=comment
+            )
+            participantship.save()
+            return HttpResponse("Create a new participantship.")
+
+
+
 class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
