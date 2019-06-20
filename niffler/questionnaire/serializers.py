@@ -1,13 +1,16 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
 from .models import *
-
 # 序列化器定义 API 表示。
-class UserSerializer(serializers.HyperlinkedModelSerializer):
+
+class UserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
     class Meta:
         model = User
-        # fields = '__all__'
-        fields = ('url', 'username', 'email', 'groups')
+        # Tuple of serialized model fields (see link [2])
+        fields = ( "id", "username", "password", "email")
+
 
 class GroupSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -19,6 +22,7 @@ class ProfileSerializer(serializers.HyperlinkedModelSerializer):
         model = Profile
         fields = '__all__'
         read_on_fields = ('balance')
+
 
 class TaskSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:

@@ -18,6 +18,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.views.decorators.csrf import csrf_exempt
+from django.dispatch import receiver
+from django.db.models.signals import post_save
 
 # Create your views here.
 from rest_framework_swagger.views import get_swagger_view
@@ -37,6 +40,38 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     filter_backends = (django_filters.rest_framework.DjangoFilterBackend,)
     filter_class = UserFilter
+
+
+#  用户注册
+@csrf_exempt 
+def user_signup(request):
+    
+    if request.method == 'POST':
+
+        # logic to check username/password
+        username = request.POST['username']
+        password = request.POST['password']
+        email = request.POST['email']
+        phone = request.POST['phone']
+        avatar = request.FILES['avatar']
+
+        user = User.objects.create(
+            username=username,
+            email=email
+        )
+        user.set_password(password)
+        user.save()
+
+        profile = Profile.objects.create(
+            user=user,
+            phone=phone,
+            balance=0,
+            avatar=avatar
+        )
+        profile.save()
+
+        return HttpResponse("Create a new user.")
+
 
 #  用户登录
 @csrf_exempt 
@@ -80,32 +115,6 @@ def user_logout(request):
         pass
     return HttpResponse("You're logged out.")
 
-
-def register(request):
-    registered = False
-    if request.method == 'POST':
-        user_form = UserForm(data=request.POST)
-        profile_form = UserProfileInfoForm(data=request.POST)
-        if user_form.is_valid() and profile_form.is_valid():
-            user = user_form.save()
-            user.set_password(user.password)
-            user.save()
-            profile = profile_form.save(commit=False)
-            profile.user = user
-            if 'profile_pic' in request.FILES:
-                print('found it')
-                profile.profile_pic = request.FILES['profile_pic']
-            profile.save()
-            registered = True
-        else:
-            print(user_form.errors,profile_form.errors)
-    else:
-        user_form = UserForm()
-        profile_form = UserProfileInfoForm()
-    return render(request,'dappx/registration.html',
-                          {'user_form':user_form,
-                           'profile_form':profile_form,
-                           'registered':registered})
 
 class GroupViewSet(viewsets.ModelViewSet):
     """

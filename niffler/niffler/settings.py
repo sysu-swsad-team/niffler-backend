@@ -44,6 +44,8 @@ INSTALLED_APPS = [
 ]
 
 REST_FRAMEWORK = {
+    # 下面这一行表示接口文档的访问权限, AllowAny不做权限限制.
+    'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.AllowAny',),
     # 使用 Django 的标准 `django.contrib.auth` 权限，
     # 或允许未经身份验证的用户进行只读访问。
     'DEFAULT_PERMISSION_CLASSES': [
@@ -55,6 +57,7 @@ REST_FRAMEWORK = {
     # 默认的验证是按照验证列表从上到下的验证
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
     ),
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',

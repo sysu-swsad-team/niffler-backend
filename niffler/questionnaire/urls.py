@@ -1,6 +1,6 @@
 from django.urls import path,include 
 from . import views
-from rest_framework import routers
+from rest_framework import routers  
 # from rest_framework_jwt.views import obtain_jwt_token
 # 路由器提供了一种自动确定 URL conf 的简便方法。
 router = routers.DefaultRouter()
@@ -17,6 +17,7 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls',
                                namespace='rest_framework')),
     # path('login/', obtain_jwt_token),
+    path('register/', views.user_signup),
     path('login/', views.user_login),
     path('logout/', views.user_logout),
     path('', include(router.urls)),
