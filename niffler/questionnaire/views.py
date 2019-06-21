@@ -81,11 +81,11 @@ def user_signup(request):
             }
             return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
 
-        user.set_password(password)
-        user.save()
+        new_user.set_password(password)
+        new_user.save()
 
         profile = Profile.objects.create(
-            user=user,
+            user=new_user,
             balance=0,
             stuId=stuId,
             birth=birth,
@@ -102,7 +102,7 @@ def user_signup(request):
         return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
 
     # if request.method == 'GET':
-
+        
 
 #  用户登录
 @csrf_exempt 
@@ -128,18 +128,20 @@ def user_login(request):
             if user:
                 login(request, user)  #用户登录
                 request.session['user_id'] = user.id
-                user_serialized = UserSerializer(user)
+                # user_serialized = UserSerializer(user)
+                profile_serialized = ProfileSerializer(Profile.objects.get(user=user))
                 response_data = {
                     "code" : 200,
                     "msg" : "登录成功",
-                    "user" : user_serialized.data
+                    # "user" : user_serialized.data,
+                    "profile" : profile_serialized.data
                 }
                 return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
             else:
                 response_data = {
                     "code" : 500,
                     "msg" : "用户名（邮箱名）或密码不正确",
-                    "user" : None
+                    "profile" : None
                 }
                 return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
         
