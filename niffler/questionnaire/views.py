@@ -171,50 +171,52 @@ def user_avatar(request):
     if request.method == 'POST':
         # req = json.loads(request.body)
         # avatar = req.get('avatar')
-        avatar = request.body
-        try:
-            with open('avatar/' + request.user.email + '.jpeg', 'wb+') as destination:
-                destination.write(avatar)
-        except:
+        # avatar = request.body
+        avatar = request.FILES['file']
+        print(avatar)
+        # try:
+        #     with open('avatar/' + request.user.email + '.jpeg', 'wb+') as destination:
+        #         destination.write(avatar)
+        # except:
+        #     response_data = {
+        #         "code" : 500,
+        #         "msg" : "请求错误"
+        #     }
+        #     return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+
+        # return HttpResponse(avatar, content_type="image/jpeg", status=status.HTTP_200_OK)
+       
+        if avatar:
+            user_id = request.session['user_id']
+            profile = Profile.objects.get(user=User.objects.get(pk=user_id))
+            profile.avatar = avatar
+            profile.save()
+
+            response_data = {
+                "code" : 200,
+                "msg" : "头像更新成功"
+            }
+            return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+        else:
             response_data = {
                 "code" : 500,
-                "msg" : "请求错误"
+                "msg" : "请求 body 未找到 avatar"
             }
             return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
 
-        return HttpResponse(avatar, content_type="image/jpeg")
-       
-        # if avatar:
-        #     user_id = request.session['user_id']
-        #     profile = Profile.objects.get(user=User.objects.get(pk=user_id))
-        #     profile.avatar = avatar
-        #     profile.save()
-
-        #     response_data = {
-        #         "code" : 200,
-        #         "msg" : "头像更新成功",
-        #         "avatar" : avatar
-        #     }
-        #     return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
-        # else:
-        #     response_data = {
-        #         "code" : 500,
-        #         "msg" : "请求 body 未找到 avatar"
-        #     }
-        #     return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
-
-    if request.method == 'GET':
-        user_id = request.session['user_id']
-        user=User.objects.get(pk=user_id)
-        avatar = 'avatar/' + user.email + '.jpeg'
-        try:
-            with open(avatar, "rb") as f:
-                return HttpResponse(f.read(), content_type="image/jpeg")
-        except IOError:
-            red = Image.new('RGBA', (1, 1), (255,0,0,0))
-            response = HttpResponse(content_type="image/jpeg")
-            red.save(response, "JPEG")
-            return response
+    # if request.method == 'GET':
+    #     user_id = request.session['user_id']
+    #     user=User.objects.get(pk=user_id)
+    #     profile = Profile.objects.get(user=user)
+    #     avatar = profile.avatar
+    #     try:
+    #         with open(avatar, "rb") as f:
+    #             return HttpResponse(f.read(), content_type="image/jpeg", status=status.HTTP_200_OK)
+    #     except IOError:
+    #         red = Image.new('RGBA', (1, 1), (255,0,0,0))
+    #         response = HttpResponse(content_type="image/jpeg", status=status.HTTP_200_OK)
+    #         red.save(response, "JPEG")
+    #         return response
 
         # user_id = request.session['user_id']
         # profile = Profile.objects.get(user=User.objects.get(pk=user_id))
