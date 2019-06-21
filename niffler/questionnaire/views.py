@@ -98,16 +98,27 @@ def user_login(request):
             if user:
                 login(request, user)  #用户登录
                 request.session['user_id'] = user.id
-                return HttpResponse("You're logged in.", status=status.HTTP_200_OK)
+                user_serialized = UserSerializer(user)
+                response_data = {
+                    "code" : 200,
+                    "msg" : "登录成功",
+                    "user" : user_serialized.data
+                }
+                return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
             else:
-                return HttpResponse("Invalid login details given", status=status.HTTP_400_BAD_REQUEST)
+                response_data = {
+                    "code" : 500,
+                    "msg" : "用户名（邮箱名）或密码不正确",
+                    "user" : None
+                }
+                return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
         
         # The test cookie failed, so display an error message. If this
         # were a real site, we'd want to display a friendlier message.
         else:
             return HttpResponse("Please enable cookies and try again.")
     
-    return HttpResponse("Method is not POST.", status=status.HTTP_404_NOT_FOUND)
+    return HttpResponse("Method is not POST.", status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 #  用户登出
