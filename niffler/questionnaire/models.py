@@ -53,6 +53,7 @@ Participantship statuses:
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.contrib.postgres.fields import JSONField
 
 CLAIMER_THRESHOLD = 10
 
@@ -148,8 +149,7 @@ class Participantship(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
     participanted_date = models.DateTimeField(auto_now_add=True)
     description = models.TextField(blank=True)
-    poll = models.FileField(upload_to='participanted_poll/%Y/%m/%d/',
-                            blank=True)
+    poll = JSONField(blank=True)
     confirmed_date = models.DateTimeField(blank=True, null=True)
     rate = models.IntegerField(blank=True, null=True)
     comment = models.TextField(blank=True)
