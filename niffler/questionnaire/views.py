@@ -187,8 +187,9 @@ def user_avatar(request):
         # return HttpResponse(avatar, content_type="image/jpeg", status=status.HTTP_200_OK)
        
         if avatar:
-            user_id = request.session['user_id']
-            profile = Profile.objects.get(user=User.objects.get(pk=user_id))
+            # user_id = request.session['user_id']
+            user = request.user
+            profile = Profile.objects.get(user=user)
             profile.avatar = avatar
             profile.save()
 
