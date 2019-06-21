@@ -165,10 +165,6 @@ def user_logout(request):
         pass
     return HttpResponse("You're logged out.")
 
-def handle_uploaded_file(f, email):
-    with open('avatar/' + email + '.jpeg', 'wb+') as destination:
-        destination.write(f)
-
 # 更改个人头像
 @csrf_exempt 
 def user_avatar(request):
@@ -177,7 +173,8 @@ def user_avatar(request):
         # avatar = req.get('avatar')
         avatar = request.body
         try:
-            handle_uploaded_file(avatar, request.user.email)
+            with open('avatar/' + request.user.email + '.jpeg', 'wb+') as destination:
+                destination.write(avatar)
         except:
             response_data = {
                 "code" : 500,
@@ -185,12 +182,7 @@ def user_avatar(request):
             }
             return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
 
-        
-        response_data = {
-            "code" : 200,
-            "msg" : "头像更新成功"
-        }
-        return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+        return HttpResponse(avatar, content_type="image/jpeg")
        
         # if avatar:
         #     user_id = request.session['user_id']
