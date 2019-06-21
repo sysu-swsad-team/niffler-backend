@@ -20,5 +20,6 @@ urlpatterns = [
     path('register/', views.user_signup),
     path('login/', views.user_login),
     path('logout/', views.user_logout),
+    path('avatar/',views.user_avatar),
     path('', include(router.urls)),
 ]

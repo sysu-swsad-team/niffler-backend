@@ -165,6 +165,45 @@ def user_logout(request):
         pass
     return HttpResponse("You're logged out.")
 
+# 更改个人头像
+@csrf_exempt 
+def user_avatar(request):
+    if request.method == 'POST':
+        req = json.loads(request.body)
+        avatar = req.get('avatar')
+        if avatar:
+            user_id = request.session['user_id']
+            profile = Profile.objects.get(user=User.objects.get(pk=user_id))
+            profile.avatar = avatar
+            profile.save()
+
+            response_data = {
+                "code" : 200,
+                "msg" : "头像更新成功",
+                "avatar" : avatar
+            }
+            return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+        else:
+            response_data = {
+                "code" : 500,
+                "msg" : "请求 body 未找到 avatar"
+            }
+            return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+
+    if request.method == 'GET':
+        user_id = request.session['user_id']
+        profile = Profile.objects.get(user=User.objects.get(pk=user_id))
+
+        response_data = {
+            "code" : 200,
+            "msg" : "获得头像 url 成功",
+            "avatar" : profile.avatar
+        }
+
+        return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+
+
+
 
 class GroupViewSet(viewsets.ModelViewSet):
     """
