@@ -165,42 +165,75 @@ def user_logout(request):
         pass
     return HttpResponse("You're logged out.")
 
+def handle_uploaded_file(f, email):
+    with open('avatar/' + email + '.jpeg', 'wb+') as destination:
+        destination.write(f)
+
 # 更改个人头像
 @csrf_exempt 
 def user_avatar(request):
     if request.method == 'POST':
-        req = json.loads(request.body)
-        avatar = req.get('avatar')
-        if avatar:
-            user_id = request.session['user_id']
-            profile = Profile.objects.get(user=User.objects.get(pk=user_id))
-            profile.avatar = avatar
-            profile.save()
-
-            response_data = {
-                "code" : 200,
-                "msg" : "头像更新成功",
-                "avatar" : avatar
-            }
-            return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
-        else:
+        # req = json.loads(request.body)
+        # avatar = req.get('avatar')
+        avatar = request.body
+        try:
+            handle_uploaded_file(avatar, request.user.email)
+        except:
             response_data = {
                 "code" : 500,
-                "msg" : "请求 body 未找到 avatar"
+                "msg" : "请求错误"
             }
             return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+
+        
+        response_data = {
+            "code" : 200,
+            "msg" : "头像更新成功"
+        }
+        return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+       
+        # if avatar:
+        #     user_id = request.session['user_id']
+        #     profile = Profile.objects.get(user=User.objects.get(pk=user_id))
+        #     profile.avatar = avatar
+        #     profile.save()
+
+        #     response_data = {
+        #         "code" : 200,
+        #         "msg" : "头像更新成功",
+        #         "avatar" : avatar
+        #     }
+        #     return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+        # else:
+        #     response_data = {
+        #         "code" : 500,
+        #         "msg" : "请求 body 未找到 avatar"
+        #     }
+        #     return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
 
     if request.method == 'GET':
         user_id = request.session['user_id']
-        profile = Profile.objects.get(user=User.objects.get(pk=user_id))
+        user=User.objects.get(pk=user_id)
+        avatar = 'avatar/' + user.email + '.jpeg'
+        try:
+            with open(avatar, "rb") as f:
+                return HttpResponse(f.read(), content_type="image/jpeg")
+        except IOError:
+            red = Image.new('RGBA', (1, 1), (255,0,0,0))
+            response = HttpResponse(content_type="image/jpeg")
+            red.save(response, "JPEG")
+            return response
 
-        response_data = {
-            "code" : 200,
-            "msg" : "获得头像 url 成功",
-            "avatar" : profile.avatar
-        }
+        # user_id = request.session['user_id']
+        # profile = Profile.objects.get(user=User.objects.get(pk=user_id))
 
-        return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+        # response_data = {
+        #     "code" : 200,
+        #     "msg" : "获得头像 url 成功",
+        #     "avatar" : profile.avatar
+        # }
+
+        # return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
 
 
 
