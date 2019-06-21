@@ -48,30 +48,60 @@ class UserViewSet(viewsets.ModelViewSet):
 def user_signup(request):
     
     if request.method == 'POST':
-
+        
+        req = json.loads(request.body)
         # logic to check username/password
-        username = request.POST['username']
-        password = request.POST['password']
-        email = request.POST['email']
-        phone = request.POST['phone']
-        avatar = request.FILES['avatar']
+        # username = request.POST.get('email')
+        # password = request.POST.get('password')   
+         # logic to check username/password
+        # username = request.POST['username']
+        # password = request.POST['password']
+        # email = request.POST['email']
+        # phone = request.POST['phone']
+        # avatar = request.FILES['avatar']
+        first_name = req.get('name')
+        stuId = req.get('stuId')
+        birth = req.get('birth')
+        sex = req.get('sex')
+        grade = req.get('grade')
+        major = req.get('major')
+        email = req.get('email')
+        password = req.get('password')
 
-        user = User.objects.create(
-            username=username,
-            email=email
-        )
+        try:
+            new_user = User.objects.create(
+                username=email,
+                email=email,
+                first_name=first_name
+            )
+        except:
+            response_data = {
+                "code" : 500,
+                "msg" : "用户已存在"
+            }
+            return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+
         user.set_password(password)
         user.save()
 
         profile = Profile.objects.create(
             user=user,
-            phone=phone,
             balance=0,
-            avatar=avatar
+            stuId=stuId,
+            birth=birth,
+            sex=sex,
+            grade=grade,
+            major=major
         )
         profile.save()
 
-        return HttpResponse("Create a new user.")
+        response_data = {
+            "code" : 200,
+            "msg" : "注册用户成功"
+        }
+        return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+
+    # if request.method == 'GET':
 
 
 #  用户登录
@@ -91,10 +121,10 @@ def user_login(request):
             # logic to check username/password
             # username = request.POST.get('email')
             # password = request.POST.get('password')   
-            username = req.get('email')
+            email = req.get('email')
             password = req.get('password')
 
-            user = authenticate(username=username, password=password)  #用户验证
+            user = authenticate(username=email, password=password)  #用户验证
             if user:
                 login(request, user)  #用户登录
                 request.session['user_id'] = user.id

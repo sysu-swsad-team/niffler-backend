@@ -58,10 +58,35 @@ CLAIMER_THRESHOLD = 10
 
 
 class Profile(models.Model):
+    GenderChoices = (
+        (u'F', u'女'),
+        (u'M', u'男'),
+    )
+    FRESHMAN = 'FR'
+    SOPHOMORE = 'SO'
+    JUNIOR = 'JR'
+    SENIOR = 'SR'
+    YEAR_IN_SCHOOL_CHOICES = [
+    ('FR', 'Freshman'),
+    ('SO', 'Sophomore'),
+    ('JR', 'Junior'),
+    ('SR', 'Senior'),
+]
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     phone = models.CharField(max_length=50, blank=True)
     balance = models.IntegerField(blank=True, default=10000)
     avatar = models.ImageField(upload_to='avatar/%Y/%m/%d/', blank=True)
+
+    birth = models.DateField(blank=True, null=True)
+    stuId = models.CharField(max_length=8,null=True)
+    grade = models.CharField(
+            max_length=2,
+            choices=YEAR_IN_SCHOOL_CHOICES,
+            default=FRESHMAN,
+        )
+    major = models.CharField(max_length=20, blank=True, null=True)
+    sex = models.CharField(max_length=2,choices=GenderChoices,null=True)
+
      
     @property
     def available_balance(self):
