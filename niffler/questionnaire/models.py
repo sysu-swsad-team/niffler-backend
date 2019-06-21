@@ -59,19 +59,15 @@ CLAIMER_THRESHOLD = 10
 
 class Profile(models.Model):
     GenderChoices = (
-        (u'F', u'女'),
-        (u'M', u'男'),
+        (u'女', u'女'),
+        (u'男', u'男'),
     )
-    FRESHMAN = 'FR'
-    SOPHOMORE = 'SO'
-    JUNIOR = 'JR'
-    SENIOR = 'SR'
     YEAR_IN_SCHOOL_CHOICES = [
-    ('FR', 'Freshman'),
-    ('SO', 'Sophomore'),
-    ('JR', 'Junior'),
-    ('SR', 'Senior'),
-]
+      (u'大一', u'大一'),
+      (u'大二', u'大二'),
+      (u'大三', u'大三'),
+      (u'大四', u'大四'),
+    ]
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     phone = models.CharField(max_length=50, blank=True)
     balance = models.IntegerField(blank=True, default=10000)
@@ -80,9 +76,9 @@ class Profile(models.Model):
     birth = models.DateField(blank=True, null=True)
     stuId = models.CharField(max_length=8,null=True)
     grade = models.CharField(
-            max_length=2,
+            max_length=4,
             choices=YEAR_IN_SCHOOL_CHOICES,
-            default=FRESHMAN,
+            default='大一',
         )
     major = models.CharField(max_length=20, blank=True, null=True)
     sex = models.CharField(max_length=2,choices=GenderChoices,null=True)

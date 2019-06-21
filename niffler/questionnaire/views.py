@@ -130,10 +130,13 @@ def user_login(request):
                 request.session['user_id'] = user.id
                 # user_serialized = UserSerializer(user)
                 profile_serialized = ProfileSerializer(Profile.objects.get(user=user))
+
                 response_data = {
                     "code" : 200,
                     "msg" : "登录成功",
                     # "user" : user_serialized.data,
+                    "email" : user.email,
+                    "name" : user.first_name,
                     "profile" : profile_serialized.data
                 }
                 return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
