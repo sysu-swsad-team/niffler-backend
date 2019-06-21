@@ -95,7 +95,7 @@ def user_login(request):
             if user:
                 login(request, user)  #用户登录
                 request.session['user_id'] = user.id
-                return HttpResponse("You're logged in.")
+                return HttpResponse("You're logged in.", status=status.HTTP_200_OK)
             else:
                 return HttpResponse("Invalid login details given")
         
