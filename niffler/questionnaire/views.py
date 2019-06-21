@@ -161,6 +161,8 @@ def user_login(request):
 def user_logout(request):
     try:
         del request.session['user_id']
+        request.session.flush()
+        logout(request)
     except KeyError:
         pass
     return HttpResponse("You're logged out.")
@@ -168,43 +170,43 @@ def user_logout(request):
 # 更改个人头像
 @csrf_exempt 
 def user_avatar(request):
+    response_data = {}
     if request.method == 'POST':
         # req = json.loads(request.body)
         # avatar = req.get('avatar')
         # avatar = request.body
-        avatar = request.FILES['file']
-        print(avatar)
-        # try:
-        #     with open('avatar/' + request.user.email + '.jpeg', 'wb+') as destination:
-        #         destination.write(avatar)
-        # except:
-        #     response_data = {
-        #         "code" : 500,
-        #         "msg" : "请求错误"
-        #     }
-        #     return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+        if request.user.is_authenticated:  
+            avatar = request.FILES['file']
+            print(avatar)
+            # try:
+            #     with open('avatar/' + request.user.email + '.jpeg', 'wb+') as destination:
+            #         destination.write(avatar)
+            # except:
+            #     response_data = {
+            #         "code" : 500,
+            #         "msg" : "请求错误"
+            #     }
+            #     return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
 
-        # return HttpResponse(avatar, content_type="image/jpeg", status=status.HTTP_200_OK)
-       
-        if avatar:
-            # user_id = request.session['user_id']
-            user = request.user
-            profile = Profile.objects.get(user=user)
-            profile.avatar = avatar
-            profile.save()
+            # return HttpResponse(avatar, content_type="image/jpeg", status=status.HTTP_200_OK)
+        
+            if avatar:
+                user_id = request.session['user_id']
+                profile = Profile.objects.get(user=request.user)
+                profile.avatar = avatar
+                profile.save()
 
-            response_data = {
-                "code" : 200,
-                "msg" : "头像更新成功"
-            }
-            return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+                response_data["code"] = 200
+                response_data["msg"] = "头像更新成功"
+                return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+            else:
+                response_data["code"] = 500
+                response_data["msg"] = "请求错误"
+                return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
         else:
-            response_data = {
-                "code" : 500,
-                "msg" : "请求 body 未找到 avatar"
-            }
+            response_data["code"] = 500
+            response_data["msg"] = "用户未登录"
             return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
-
     # if request.method == 'GET':
     #     user_id = request.session['user_id']
     #     user=User.objects.get(pk=user_id)
@@ -230,6 +232,50 @@ def user_avatar(request):
 
         # return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
 
+# 发布问卷
+@csrf_exempt 
+def questionnaire_create(request):
+    response_data = {}
+    if request.method == 'POST':
+        # user = request.user
+        form = request.POST
+        email = form['email']
+        user = User.objects.get(email=email)
+        available_balance = Profile.objects.get(user=user).available_balance
+        title = form['title']
+        description = form['description']
+        poll = form['questions']
+        fee = int(form['fee'])
+        participant_quota = int(form['maxNumber'])
+        due_date = form['dueDate']
+        tag_name = form['tag']
+
+        # if available_balance < fee * participant_quota:
+        #     response_data['code'] = 500
+        #     response_data['msg'] = "余额不足"
+        #     return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+
+        task = Task.objects.create(
+            issuer=user,
+            title=title,
+            description=description,
+            poll=poll,
+            fee=fee,
+            participant_quota=participant_quota,
+            due_date=due_date   
+        )
+        task.save()
+        
+        tag_obj = Tag.objects.create(
+            name=tag_name
+        )
+        tag_obj.save()
+        tag_obj.tasks.add(task)
+        
+
+        response_data['code'] = 200
+        response_data['msg'] = "发布成功"
+        return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
 
 
 
@@ -256,33 +302,6 @@ class TaskViewSet(viewsets.ModelViewSet):
     
     queryset = Task.objects.all()
     serializer_class = TaskSerializer     
-
-    def create(self, request):
-        if request.method == 'POST':
-            user = request.user
-            available_balance = Profile.objects.get(user=user).available_balance
-            title = request.POST['title']
-            description = request.POST['description']
-            poll = request.FILES['poll']
-            fee = int(request.POST['fee'])
-            participant_quota = int(request.POST['participant_quota'])
-            due_date = request.POST['due_date']
-
-            if available_balance < fee * participant_quota:
-                return HttpResponse("Not enough balance.")
-
-            task = Task.objects.create(
-                issuer=user,
-                title=title,
-                description=description,
-                poll=poll,
-                fee=fee,
-                participant_quota=participant_quota,
-                due_date=due_date
-            )
-            task.save()
-            return HttpResponse("Create a new task.")
-            
 
     # def update(self, request, pk=None):
     # 
