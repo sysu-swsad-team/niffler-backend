@@ -22,15 +22,16 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = '__all__'
-        read_on_fields = ('balance')
+        fields = ('user', 'phone', 'balance', 'avatar', 'birth', 
+                  'stuId', 'grade', 'major', 'sex', 'available_balance',)
+        read_only_fields = ('balance', )
 
 
 class TaskSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Task
         fields = '__all__'
-        read_on_fields = ('issuer', 'claimers', 'cancelled')
+        read_only_fields = ('issuer', 'claimers', 'cancelled')
 
 class ParticipantshipSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
