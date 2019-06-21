@@ -21,6 +21,7 @@ from rest_framework import status
 from django.views.decorators.csrf import csrf_exempt
 from django.dispatch import receiver
 from django.db.models.signals import post_save
+import json
 
 # Create your views here.
 from rest_framework_swagger.views import get_swagger_view
@@ -86,24 +87,28 @@ def user_login(request):
 
             # The test cookie worked, so delete it.
             request.session.delete_test_cookie()
-
+            req = json.loads(request.body)
             # logic to check username/password
-            username = request.POST['username']
-            password = request.POST['password']
+            # username = request.POST.get('email')
+            # password = request.POST.get('password')   
+            username = req.get('email')
+            password = req.get('password')
 
             user = authenticate(username=username, password=password)  #用户验证
             if user:
                 login(request, user)  #用户登录
                 request.session['user_id'] = user.id
-                return HttpResponse("You're logged in.")
+                return HttpResponse("You're logged in.", status=status.HTTP_200_OK)
             else:
-                return HttpResponse("Invalid login details given")
+                return HttpResponse("Invalid login details given", status=status.HTTP_400_BAD_REQUEST)
         
         # The test cookie failed, so display an error message. If this
         # were a real site, we'd want to display a friendlier message.
         else:
             return HttpResponse("Please enable cookies and try again.")
     
+    return HttpResponse("Method is not POST.", status=status.HTTP_404_NOT_FOUND)
+
 
 #  用户登出
 @csrf_exempt 
