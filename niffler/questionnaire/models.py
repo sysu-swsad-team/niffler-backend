@@ -101,7 +101,7 @@ class Task(models.Model):
     poll = models.TextField(blank=True)
     issuer = models.ForeignKey(User, 
             related_name='issued_tasks', on_delete=models.CASCADE)
-    fee = models.IntegerField(blank=True, null=True)
+    fee = models.FloatField(blank=True, null=True)
     participant_quota = models.IntegerField(blank=True, null=True)
     created_date = models.DateTimeField(auto_now_add=True)
     due_date = models.DateTimeField(blank=True, null=True)
@@ -111,6 +111,13 @@ class Task(models.Model):
                                       related_name='claimed_tasks', blank=True)
     cancelled = models.BooleanField(default=False)
     
+    TASK_CHOICES = (
+        (u'问卷', u'问卷'),
+        (u'跑腿', u'跑腿'),
+    )
+    task_type = models.CharField(max_length=4, choices=TASK_CHOICES, default='问卷')
+
+
     @property
     def valid_participant_amount(self):
         return self.participantship_set.filter(

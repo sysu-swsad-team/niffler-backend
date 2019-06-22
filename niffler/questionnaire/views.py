@@ -238,14 +238,15 @@ def questionnaire_create(request):
     response_data = {}
     if request.method == 'POST':
         # user = request.user
-        form = request.POST
+        # form = request.POST
+        form = json.loads(request.body)
         email = form['email']
         user = User.objects.get(email=email)
         available_balance = Profile.objects.get(user=user).available_balance
         title = form['title']
         description = form['description']
         poll = form['questions']
-        fee = int(form['fee'])
+        fee = float(form['fee'])
         participant_quota = int(form['maxNumber'])
         due_date = form['dueDate']
         tag_name = form['tag']
@@ -262,7 +263,7 @@ def questionnaire_create(request):
             poll=poll,
             fee=fee,
             participant_quota=participant_quota,
-            due_date=due_date   
+            due_date=due_date  
         )
         task.save()
         
@@ -299,10 +300,14 @@ class TaskViewSet(viewsets.ModelViewSet):
     """
     authentication_classes = (SessionAuthentication, BasicAuthentication)
     permission_classes = (IsAuthenticated,)
-    
+
     queryset = Task.objects.all()
     serializer_class = TaskSerializer     
 
+    def get_queryset(self):
+        queryset = Task.objects.all()
+        filtered = [x for x in queryset if x.status=='UNDERWAY' and x.task_type=='问卷']
+        return filtered
     # def update(self, request, pk=None):
     # 
 
