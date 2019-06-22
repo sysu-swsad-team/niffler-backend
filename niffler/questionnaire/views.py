@@ -289,7 +289,6 @@ class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
 
-
 class TaskViewSet(viewsets.ModelViewSet):
     """
     允许 Task 查看或编辑的 API 端点。
@@ -300,15 +299,31 @@ class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer     
 
+
     def get_queryset(self):
-        queryset = Task.objects.all()
+        queryset = Task.objects.all().order_by('created_date')
+
+        title = self.request.query_params.get('title', None)
+        if title is not None:
+            queryset = queryset.filter(title=title)
+
+        issuer_name = self.request.query_params.get('sponsor', None)
+        if issuer_name is not None:
+            user = get_object_or_404(User, first_name=issuer_name)
+            queryset = queryset.filter(issuer=user)
+
         filtered = [x for x in queryset if x.status=='UNDERWAY' and x.task_type=='问卷']
+
         return filtered
+
     # def update(self, request, pk=None):
     # 
 
-    # def retrieve(self, request, pk=None):
-    # pass
+    def retrieve(self, request, pk=None):
+        task = get_object_or_404(Task, pk=pk)
+        task_serialized = TaskSerializer(task)
+
+        return HttpResponse(json.dumps(task_serialized.data), status=status.HTTP_200_OK)
 
    
 
