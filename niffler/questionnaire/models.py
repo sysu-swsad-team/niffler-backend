@@ -98,7 +98,8 @@ class Profile(models.Model):
 class Task(models.Model):
     title = models.CharField(max_length=150)
     description = models.TextField(blank=True)
-    poll = models.FileField(upload_to='task_poll/%Y/%m/%d/', blank=True)
+    # poll = models.FileField(upload_to='task_poll/%Y/%m/%d/', blank=True)
+    poll = models.TextField(blank=True)
     issuer = models.ForeignKey(User, 
             related_name='issued_tasks', on_delete=models.CASCADE)
     fee = models.IntegerField(blank=True, null=True)
@@ -106,9 +107,9 @@ class Task(models.Model):
     created_date = models.DateTimeField(auto_now_add=True)
     due_date = models.DateTimeField(blank=True, null=True)
     participants = models.ManyToManyField(User,
-        related_name='participanted_tasks', through='Participantship')
+        related_name='participanted_tasks', through='Participantship', blank=True)
     claimers = models.ManyToManyField(User,
-                                      related_name='claimed_tasks')
+                                      related_name='claimed_tasks', blank=True)
     cancelled = models.BooleanField(default=False)
     
     @property
@@ -171,5 +172,5 @@ class Participantship(models.Model):
 
 class Tag(models.Model):
     name = models.CharField(max_length=150)
-    users = models.ManyToManyField(User)
-    tasks = models.ManyToManyField(Task)
+    users = models.ManyToManyField(User, blank=True)
+    tasks = models.ManyToManyField(Task, blank=True)
