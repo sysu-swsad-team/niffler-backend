@@ -234,6 +234,25 @@ def user_avatar(request):
         # }
 
         # return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+# @csrf_exempt
+# def list_questionnaire(request):
+#     response_data = {}
+#     queryset = Task.objects.all().order_by('created_date')
+
+#     title = request.query_params.get('title', None)
+#     if title is not None:
+#         queryset = queryset.filter(title=title)
+
+#     issuer_name = request.query_params.get('sponsor', None)
+#     if issuer_name is not None:
+#         user = get_object_or_404(User, first_name=issuer_name)
+#         queryset = queryset.filter(issuer=user)
+
+#     filtered = [x for x in queryset if x.status=='UNDERWAY' and x.task_type=='问卷']
+    
+#     for x in filtered:
+#         task_serialized = Task
+#     return filtered
 
 
 class GroupViewSet(viewsets.ModelViewSet):
@@ -254,7 +273,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     允许 Task 查看或编辑的 API 端点。
     """
     authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
-    permission_classes = (IsAuthenticated,)
+    # permission_classes = (IsAuthenticated,)
 
     queryset = Task.objects.all()
     serializer_class = TaskSerializer     
