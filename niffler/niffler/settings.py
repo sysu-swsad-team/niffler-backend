@@ -49,9 +49,9 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.AllowAny',),
     # 使用 Django 的标准 `django.contrib.auth` 权限，
     # 或允许未经身份验证的用户进行只读访问。
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
-    ],
+    # 'DEFAULT_PERMISSION_CLASSES': [
+    #     'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    # ],
     # 配置默认的认证方式 base:账号密码验证  session：session_id认证
     'DEFAULT_AUTHENTICATION_CLASSES': (
     # drf的这一阶段主要是做验证,middleware的auth主要是设置session和user到request对象

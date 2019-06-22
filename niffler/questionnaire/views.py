@@ -10,6 +10,7 @@ from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from rest_framework.decorators import action
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication 
 
 from .models import *
 from .serializers import *
@@ -24,6 +25,11 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save
 import json
 
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+
+    def enforce_csrf(self, request):
+        return  # To not perform the csrf check previously happening
+        
 class UserFilter(django_filters.rest_framework.FilterSet):
     class Meta:
         model = User
@@ -247,14 +253,13 @@ class TaskViewSet(viewsets.ModelViewSet):
     """
     允许 Task 查看或编辑的 API 端点。
     """
-    authentication_classes = (SessionAuthentication, BasicAuthentication)
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
     permission_classes = (IsAuthenticated,)
 
     queryset = Task.objects.all()
     serializer_class = TaskSerializer     
 
     @action(detail=False, methods=['get'])
-    @csrf_exempt
     def get_queryset(self):
         queryset = Task.objects.all().order_by('created_date')
 
