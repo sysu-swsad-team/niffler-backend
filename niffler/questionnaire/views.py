@@ -23,10 +23,6 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save
 import json
 
-# Create your views here.
-from rest_framework_swagger.views import get_swagger_view
-schema_view = get_swagger_view(title='Pastebin API')
-
 class UserFilter(django_filters.rest_framework.FilterSet):
     class Meta:
         model = User
