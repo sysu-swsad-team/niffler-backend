@@ -291,6 +291,7 @@ class TaskViewSet(viewsets.ModelViewSet):
             return HttpResponse(json.dumps(response_data), 
                                 status=status.HTTP_400_BAD_REQUEST)
         due_date = form['dueDate'] # maybe also need check
+        task_type = form['taskType'] # maybe also need check
         tag_set = form['tagSet'] # maybe also need check
         try:
             assert(tag_set == None or isinstance(tag_set, list))
@@ -326,7 +327,8 @@ class TaskViewSet(viewsets.ModelViewSet):
                 poll=poll,
                 fee=fee,
                 participant_quota=participant_quota,
-                due_date=due_date  
+                due_date=due_date,
+                task_type=task_type
             )
             task.save()
 
