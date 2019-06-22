@@ -199,19 +199,22 @@ def user_avatar(request):
             response_data["code"] = 500
             response_data["msg"] = "用户未登录"
             return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
-    # if request.method == 'GET':
-    #     user_id = request.session['user_id']
-    #     user=User.objects.get(pk=user_id)
-    #     profile = Profile.objects.get(user=user)
-    #     avatar = profile.avatar
-    #     try:
-    #         with open(avatar, "rb") as f:
-    #             return HttpResponse(f.read(), content_type="image/jpeg", status=status.HTTP_200_OK)
-    #     except IOError:
-    #         red = Image.new('RGBA', (1, 1), (255,0,0,0))
-    #         response = HttpResponse(content_type="image/jpeg", status=status.HTTP_200_OK)
-    #         red.save(response, "JPEG")
-    #         return response
+    
+    if request.method == 'GET':
+        # user_id = request.session['user_id']
+        user = request.user
+        # user=User.objects.get(pk=user_id)
+        profile = Profile.objects.get(user=user)
+        avatar = profile.avatar
+        # print(avatar)
+        try:
+            with open(avatar.url, "rb") as f:
+                return HttpResponse(f.read(), content_type="image/jpeg", status=status.HTTP_200_OK)
+        except IOError:
+            red = Image.new('RGBA', (1, 1), (255,0,0,0))
+            response = HttpResponse(content_type="image/jpeg", status=status.HTTP_200_OK)
+            red.save(response, "JPEG")
+            return response
 
         # user_id = request.session['user_id']
         # profile = Profile.objects.get(user=User.objects.get(pk=user_id))
@@ -250,16 +253,26 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def get_queryset(self):
+        print(self.request.user)
         queryset = Task.objects.all().order_by('created_date')
 
         title = self.request.query_params.get('title', None)
-        if title is not None and title is not '':
-            queryset = queryset.filter(title=title)
-
         issuer_name = self.request.query_params.get('issuer', None)
-        if issuer_name is not None and issuer_name is not '':
-            user = get_object_or_404(User, first_name=issuer_name)
-            queryset = queryset.filter(issuer=user)
+
+        if title is not None and issuer_name is not None:
+            queryset = queryset.filter(title=title)
+            
+            if issuer_name is not None:
+                # user = get_object_or_404(User, first_name=issuer_name)
+                user = User.objects.get(pk=issuer_name)
+                if user:
+                    queryset = queryset.filter(issuer=user)
+      
+                # user = get_object_or_404(User, first_name=issuer_name)
+                user = User.objects.get(pk=issuer_name)
+                if user:
+                    queryset = queryset.filter(issuer=user)
+
 
         filtered = [x for x in queryset if x.status=='UNDERWAY' and x.task_type=='问卷']
 
