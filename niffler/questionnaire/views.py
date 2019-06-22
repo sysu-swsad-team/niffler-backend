@@ -24,7 +24,7 @@ from rest_framework import status
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 import json
-
+import os
 class CsrfExemptSessionAuthentication(SessionAuthentication):
 
     def enforce_csrf(self, request):
@@ -159,6 +159,17 @@ def user_logout(request):
         pass
     return HttpResponse("You're logged out.")
 
+# 获取图像
+@csrf_exempt
+def get_image(request, image):
+    print(image)
+    if request.method == 'GET':
+            try:
+                with open('avatar/' + image, "rb") as f:
+                    return HttpResponse(f.read(), content_type="image/jpeg", status=status.HTTP_200_OK)
+            except IOError:
+                return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+
 # 更改个人头像
 @csrf_exempt 
 def user_avatar(request):
@@ -169,8 +180,6 @@ def user_avatar(request):
         # avatar = request.body
         if request.user.is_authenticated:  
             avatar = request.FILES['file']
-            print(avatar)
-            # try:
             #     with open('avatar/' + request.user.email + '.jpeg', 'wb+') as destination:
             #         destination.write(avatar)
             # except:
@@ -187,7 +196,7 @@ def user_avatar(request):
                 profile = Profile.objects.get(user=request.user)
                 profile.avatar = avatar
                 profile.save()
-
+            # try:
                 response_data["code"] = 200
                 response_data["msg"] = "头像更新成功"
                 return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)

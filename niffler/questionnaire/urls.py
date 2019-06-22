@@ -25,5 +25,6 @@ urlpatterns = [
     path('login/', views.user_login),
     path('logout/', views.user_logout),
     path('avatar/',views.user_avatar),
+    path('avatar/<image>',views.get_image),
     path('', include(router.urls)),
 ]
