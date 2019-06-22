@@ -178,7 +178,9 @@ def user_avatar(request):
         # req = json.loads(request.body)
         # avatar = req.get('avatar')
         # avatar = request.body
-        if request.user.is_authenticated:  
+
+        # TODO: 用户验证。暂时使用了 or True
+        if request.user.is_authenticated or True:  
             avatar = request.FILES['file']
             #     with open('avatar/' + request.user.email + '.jpeg', 'wb+') as destination:
             #         destination.write(avatar)
@@ -192,22 +194,24 @@ def user_avatar(request):
             # return HttpResponse(avatar, content_type="image/jpeg", status=status.HTTP_200_OK)
         
             if avatar:
-                user_id = request.session['user_id']
-                profile = Profile.objects.get(user=request.user)
+                # user_id = request.session['user_id']
+                # profile = Profile.objects.get(user=request.user)    
+                profile = Profile.objects.get(pk=1)
                 profile.avatar = avatar
                 profile.save()
             # try:
-                response_data["code"] = 200
                 response_data["msg"] = "头像更新成功"
+                response_data["profile"] = ProfileSerializer(Profile.objects.get(pk=1)).data
+                print(response_data)
                 return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
             else:
-                response_data["code"] = 500
                 response_data["msg"] = "请求错误"
-                return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+                print(response_data)
+                return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
-            response_data["code"] = 500
             response_data["msg"] = "用户未登录"
-            return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+            print(response_data)
+            return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     if request.method == 'GET':
         # user_id = request.session['user_id']
