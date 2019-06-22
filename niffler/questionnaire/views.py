@@ -336,10 +336,10 @@ class TaskViewSet(viewsets.ModelViewSet):
 
             if tag_set:
                 for tag_name in tag_set:
-                    if Tag.objects.filter(name=tag_name).count() == 0:
-                        tag_obj = Tag.objects.create(name=tag_name)
-                    else:
+                    if Tag.objects.filter(name=tag_name).exists():
                         tag_obj = Tag.objects.get(name=tag_name)
+                    else:
+                        tag_obj = Tag.objects.create(name=tag_name)
                     tag_obj.tasks.add(task)
         except:
             response_data = {
