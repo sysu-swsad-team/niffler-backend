@@ -11,9 +11,13 @@ router.register('profile', views.ProfileViewSet)
 router.register('Participantship', views.ParticipantshipViewSet)
 router.register('tag', views.TagViewSet)
 
+# Create your views here.
+from rest_framework_swagger.views import get_swagger_view
+schema_view = get_swagger_view(title='Questionnaire API')
+
 # 使用自动 URL 路由连接我们的 API。
 urlpatterns = [
-    path('', views.schema_view),
+    path('', schema_view),
     path('api-auth/', include('rest_framework.urls',
                                namespace='rest_framework')),
     # path('login/', obtain_jwt_token),
@@ -21,6 +25,5 @@ urlpatterns = [
     path('login/', views.user_login),
     path('logout/', views.user_logout),
     path('avatar/',views.user_avatar),
-    path('create/',views.questionnaire_create),
     path('', include(router.urls)),
 ]
