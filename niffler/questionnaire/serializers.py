@@ -32,7 +32,7 @@ class TaskSerializer(serializers.ModelSerializer):
         model = Task
         fields = ('id', 'title', 'description', 'tag_set', 'poll', 'issuer', 
                   'fee', 'participant_quota', 'created_date', 'due_date', 
-                  'participants', 'claimers', 'cancelled', 
+                  'participants', 'claimers', 'cancelled', 'task_type',
                   'valid_participant_amount', 'remaining_quota', 'status')
         read_only_fields = ('issuer', 'claimers', 'cancelled')
 
