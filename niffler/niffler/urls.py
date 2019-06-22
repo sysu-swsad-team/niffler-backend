@@ -20,6 +20,5 @@ from django.conf.urls import url
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('questionnaire/', include('questionnaire.urls')),
-    url('accounts/', admin.site.urls),
 ]
 

@@ -32,3 +32,5 @@ class EmailOrUsernameModelBackend(ModelBackend):
             # difference between an existing and a non-existing user (see
             # https://code.djangoproject.com/ticket/20760)
             user_model().set_password(password)
+
+    

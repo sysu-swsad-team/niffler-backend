@@ -112,55 +112,44 @@ def user_signup(request):
 def user_login(request):
     
     if request.method == 'POST':
-        # If we didn't post, send the test cookie along with the login form.
-        request.session.set_test_cookie()
 
-        # Check that the test cookie worked (we set it below):
-        if request.session.test_cookie_worked():
+        req = json.loads(request.body)
+        # logic to check username/password
+        # username = request.POST.get('email')
+        # password = request.POST.get('password')   
+        email = req.get('email')
+        password = req.get('password')
 
-            # The test cookie worked, so delete it.
-            request.session.delete_test_cookie()
-            req = json.loads(request.body)
-            # logic to check username/password
-            # username = request.POST.get('email')
-            # password = request.POST.get('password')   
-            email = req.get('email')
-            password = req.get('password')
+        user = authenticate(username=email, password=password)  #用户验证
+        if user:
+            login(request, user)  #用户登录
+            request.session['user_id'] = user.id
+            # user_serialized = UserSerializer(user)
+            profile_serialized = ProfileSerializer(Profile.objects.get(user=user))
 
-            user = authenticate(username=email, password=password)  #用户验证
-            if user:
-                login(request, user)  #用户登录
-                request.session['user_id'] = user.id
-                # user_serialized = UserSerializer(user)
-                profile_serialized = ProfileSerializer(Profile.objects.get(user=user))
-
-                response_data = {
-                    "code" : 200,
-                    "msg" : "登录成功",
-                    # "user" : user_serialized.data,
-                    "email" : user.email,
-                    "name" : user.first_name,
-                    "profile" : profile_serialized.data
-                }
-                return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
-            else:
-                response_data = {
-                    "code" : 500,
-                    "msg" : "用户名（邮箱名）或密码不正确",
-                    "profile" : None
-                }
-                return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
-        
-        # The test cookie failed, so display an error message. If this
-        # were a real site, we'd want to display a friendlier message.
+            response_data = {
+                "code" : 200,
+                "msg" : "登录成功",
+                # "user" : user_serialized.data,
+                "email" : user.email,
+                "name" : user.first_name,
+                "profile" : profile_serialized.data
+            }
+            return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
         else:
-            return HttpResponse("Please enable cookies and try again.")
+            response_data = {
+                "code" : 500,
+                "msg" : "用户名（邮箱名）或密码不正确",
+                "profile" : None
+            }
+            return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
     
     return HttpResponse("Method is not POST.", status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 #  用户登出
 @csrf_exempt 
+@login_required
 def user_logout(request):
     try:
         del request.session['user_id']
@@ -234,25 +223,6 @@ def user_avatar(request):
         # }
 
         # return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
-# @csrf_exempt
-# def list_questionnaire(request):
-#     response_data = {}
-#     queryset = Task.objects.all().order_by('created_date')
-
-#     title = request.query_params.get('title', None)
-#     if title is not None:
-#         queryset = queryset.filter(title=title)
-
-#     issuer_name = request.query_params.get('sponsor', None)
-#     if issuer_name is not None:
-#         user = get_object_or_404(User, first_name=issuer_name)
-#         queryset = queryset.filter(issuer=user)
-
-#     filtered = [x for x in queryset if x.status=='UNDERWAY' and x.task_type=='问卷']
-    
-#     for x in filtered:
-#         task_serialized = Task
-#     return filtered
 
 
 class GroupViewSet(viewsets.ModelViewSet):
@@ -272,7 +242,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     """
     允许 Task 查看或编辑的 API 端点。
     """
-    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+    # authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
     # permission_classes = (IsAuthenticated,)
 
     queryset = Task.objects.all()
@@ -283,11 +253,11 @@ class TaskViewSet(viewsets.ModelViewSet):
         queryset = Task.objects.all().order_by('created_date')
 
         title = self.request.query_params.get('title', None)
-        if title is not None:
+        if title is not None and title is not '':
             queryset = queryset.filter(title=title)
 
-        issuer_name = self.request.query_params.get('sponsor', None)
-        if issuer_name is not None:
+        issuer_name = self.request.query_params.get('issuer', None)
+        if issuer_name is not None and issuer_name is not '':
             user = get_object_or_404(User, first_name=issuer_name)
             queryset = queryset.filter(issuer=user)
 
