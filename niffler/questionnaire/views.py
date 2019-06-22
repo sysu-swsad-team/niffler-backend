@@ -9,6 +9,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
+from rest_framework.decorators import action
+
 from .models import *
 from .serializers import *
 
@@ -18,7 +20,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.views.decorators.csrf import csrf_exempt
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 import json
@@ -299,7 +300,8 @@ class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer     
 
-
+    @action(detail=False, methods=['get'])
+    @csrf_exempt
     def get_queryset(self):
         queryset = Task.objects.all().order_by('created_date')
 
@@ -318,21 +320,17 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     # def update(self, request, pk=None):
     # 
-
     def retrieve(self, request, pk=None):
         task = get_object_or_404(Task, pk=pk)
         task_serialized = TaskSerializer(task)
-
         return HttpResponse(json.dumps(task_serialized.data), status=status.HTTP_200_OK)
-
-   
 
     # def partial_update(self, request, pk=None):
     # pass
-
-    # def destroy(self, request, pk=None):
-    # pass
-
+    def destroy(self, request, pk=None):
+        task = get_object_or_404(Task, pk=pk)
+        task.delete()
+        return HttpResponse(status=status.HTTP_200_OK)
     # """
     # 如果你有特别的需要被路由到的方法,可以将它们标记为需要路由使用@detail_route或@list_route修饰符。
     # """
@@ -352,25 +350,36 @@ class ParticipantshipViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
 
     def create(self, request):
+        response_data = {}
         if request.method == 'POST':
             user = request.user
-            task_id = request.POST['task_id']
+            form = json.loads(request.body)
+
+            task_id = form['task_id']
             task = Task.objects.get(pk=task_id)
             task_status = task.status
 
             if task_status == 'INVALID':
-                return HttpResponse("TASK INVALID")
+                response_data['code'] = 500
+                response_data['msg'] = "问卷存在争议"
+                return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
             elif task_status == 'CANCELLED':
-                return HttpResponse("TASK CANCELLED")
+                response_data['code'] = 500
+                response_data['msg'] = "问卷被发布者取消"
+                return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
             elif task_status == 'CLOSED':
-                return HttpResponse("TASK CLOSED")
+                response_data['code'] = 500
+                response_data['msg'] = "问卷已经过截至日期"
+                return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
             elif task_status == 'QUOTA FULL':
-                return HttpResponse("TASK QUOTA FULL")
+                response_data['code'] = 500
+                response_data['msg'] = "问卷参与人数已满"
+                return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
             
             description = task.description
-            poll = request.FILES['poll']
-            rate = int(request.POST['rate'])
-            comment = request.POST['comment']
+            poll = form['poll']
+            rate = int(form['rate'])
+            comment = form['comment']
 
             participantship = Participantship.objects.create(
                 user=user,
@@ -381,8 +390,10 @@ class ParticipantshipViewSet(viewsets.ModelViewSet):
                 comment=comment
             )
             participantship.save()
-            return HttpResponse("Create a new participantship.")
 
+            response_data['code'] = 200
+            response_data['msg'] = "参与问卷成功"
+            return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
 
 
 class TagViewSet(viewsets.ModelViewSet):
