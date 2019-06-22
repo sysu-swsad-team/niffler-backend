@@ -30,7 +30,10 @@ class ProfileSerializer(serializers.ModelSerializer):
 class TaskSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Task
-        fields = '__all__'
+        fields = ('title', 'description', 'tag_set', 'poll', 'issuer', 
+                  'fee', 'participant_quota', 'created_date', 'due_date', 
+                  'participants', 'claimers', 'cancelled', 
+                  'valid_participant_amount', 'remaining_quota', 'status')
         read_only_fields = ('issuer', 'claimers', 'cancelled')
 
 class ParticipantshipSerializer(serializers.HyperlinkedModelSerializer):
