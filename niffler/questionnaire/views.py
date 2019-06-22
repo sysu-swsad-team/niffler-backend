@@ -228,53 +228,6 @@ def user_avatar(request):
 
         # return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
 
-# 发布问卷
-@csrf_exempt 
-def questionnaire_create(request):
-    response_data = {}
-    if request.method == 'POST':
-        # user = request.user
-        # form = request.POST
-        form = json.loads(request.body)
-        email = form['email']
-        user = User.objects.get(email=email)
-        available_balance = Profile.objects.get(user=user).available_balance
-        title = form['title']
-        description = form['description']
-        poll = form['questions']
-        fee = float(form['fee'])
-        participant_quota = int(form['maxNumber'])
-        due_date = form['dueDate']
-        tag_name = form['tag']
-
-        # if available_balance < fee * participant_quota:
-        #     response_data['code'] = 500
-        #     response_data['msg'] = "余额不足"
-        #     return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
-
-        task = Task.objects.create(
-            issuer=user,
-            title=title,
-            description=description,
-            poll=poll,
-            fee=fee,
-            participant_quota=participant_quota,
-            due_date=due_date  
-        )
-        task.save()
-        
-        tag_obj = Tag.objects.create(
-            name=tag_name
-        )
-        tag_obj.save()
-        tag_obj.tasks.add(task)
-        
-
-        response_data['code'] = 200
-        response_data['msg'] = "发布成功"
-        return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
-
-
 
 class GroupViewSet(viewsets.ModelViewSet):
     """
@@ -289,7 +242,6 @@ class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
 
-
 class TaskViewSet(viewsets.ModelViewSet):
     """
     允许 Task 查看或编辑的 API 端点。
@@ -300,15 +252,114 @@ class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer     
 
+
     def get_queryset(self):
-        queryset = Task.objects.all()
+        queryset = Task.objects.all().order_by('created_date')
+
+        title = self.request.query_params.get('title', None)
+        if title is not None:
+            queryset = queryset.filter(title=title)
+
+        issuer_name = self.request.query_params.get('sponsor', None)
+        if issuer_name is not None:
+            user = get_object_or_404(User, first_name=issuer_name)
+            queryset = queryset.filter(issuer=user)
+
         filtered = [x for x in queryset if x.status=='UNDERWAY' and x.task_type=='问卷']
+
         return filtered
+
+    def create(self, request, *args, **kwargs):
+        """
+        发布问卷
+        """
+        user = request.user
+        form = request.data
+        available_balance = user.profile.available_balance
+        title = form['title']
+        description = form['description']
+        poll = form['question']
+        try:
+            fee = int(form['fee']) if form['fee'] else None
+            participant_quota = int(form['maxNumber']) \
+                           if form['maxNumber'] else None
+        except:
+            response_data = {
+                "code" : status.HTTP_400_BAD_REQUEST,
+                "msg" : "金额与参与名额必须为数字"
+            }
+            return HttpResponse(json.dumps(response_data), 
+                                status=status.HTTP_400_BAD_REQUEST)
+        due_date = form['dueDate'] # maybe also need check
+        tag_set = form['tagSet'] # maybe also need check
+        try:
+            assert(tag_set == None or isinstance(tag_set, list))
+        except:
+            response_data = {
+                "code" : status.HTTP_400_BAD_REQUEST,
+                "msg" : "标签必须为空或数组"
+            }
+            return HttpResponse(json.dumps(response_data), 
+                                status=status.HTTP_400_BAD_REQUEST)
+
+        if fee:
+            if not participant_quota:
+                response_data = {
+                    "code" : status.HTTP_400_BAD_REQUEST,
+                    "msg" : "设定金额时必须同时设定参与名额"
+                }
+                return HttpResponse(json.dumps(response_data), 
+                                        status=status.HTTP_400_BAD_REQUEST)
+            if available_balance < fee * participant_quota:
+                response_data = {
+                    "code" : status.HTTP_400_BAD_REQUEST,
+                    "msg" : "可用余额不足"
+                }
+                return HttpResponse(json.dumps(response_data), 
+                                        status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            task = Task.objects.create(
+                issuer=user,
+                title=title,
+                description=description,
+                poll=poll,
+                fee=fee,
+                participant_quota=participant_quota,
+                due_date=due_date  
+            )
+            task.save()
+
+            if tag_set:
+                for tag_name in tag_set:
+                    if Tag.objects.filter(name=tag_name).count() == 0:
+                        tag_obj = Tag.objects.create(name=tag_name)
+                    else:
+                        tag_obj = Tag.objects.get(name=tag_name)
+                    tag_obj.tasks.add(task)
+        except:
+            response_data = {
+                "code" : status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "msg" : "发布失败"
+            }
+            return HttpResponse(json.dumps(response_data), 
+                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        response_data = {
+            "code" : status.HTTP_201_CREATED,
+            "msg" : "发布成功"
+        }
+        return HttpResponse(json.dumps(response_data), 
+                                status=status.HTTP_201_CREATED)
+
     # def update(self, request, pk=None):
     # 
 
-    # def retrieve(self, request, pk=None):
-    # pass
+    def retrieve(self, request, pk=None):
+        task = get_object_or_404(Task, pk=pk)
+        task_serialized = TaskSerializer(task)
+
+        return HttpResponse(json.dumps(task_serialized.data), status=status.HTTP_200_OK)
 
    
 
