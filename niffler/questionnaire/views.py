@@ -24,9 +24,19 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.dispatch import receiver
 from django.db.models.signals import post_save
+from django.core.mail import send_mail
+from django.utils.crypto import get_random_string
+from django.utils import timezone
+
 import json
-import os
+import os,smtplib
 from PIL import Image
+import hashlib
+from string import Template
+from django.core.mail import EmailMultiAlternatives
+from datetime import datetime, timedelta
+import random
+
 class CsrfExemptSessionAuthentication(SessionAuthentication):
 
     def enforce_csrf(self, request):
@@ -51,7 +61,8 @@ class UserViewSet(viewsets.ModelViewSet):
 #  用户注册
 @csrf_exempt 
 def user_signup(request):
-    
+    response_data = {}
+
     if request.method == 'POST':
         
         req = json.loads(request.body)
@@ -73,41 +84,121 @@ def user_signup(request):
         email = req.get('email')
         password = req.get('password')
 
+        
+        try:
+            user = User.objects.get(email=email)
+        except:
+            response_data = {
+                "msg" : "未验证邮箱"
+            }
+            return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        user.set_password(password)
+        user.first_name = first_name
+        user.save()
+
+        profile = Profile.objects.get(user=user)
+        profile.stuId = stuId
+        profile.birth = birth
+        profile.sex = sex
+        profile.grade = grade
+        profile.major = major
+        profile.save()
+           
+        response_data = {
+            "msg" : "注册用户成功"
+        }
+        return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+    
+    # 验证邮箱
+    if request.method == 'GET':
+        email = request.GET['email']
+        
         try:
             new_user = User.objects.create(
                 username=email,
-                email=email,
-                first_name=first_name
+                email=email
             )
         except:
             response_data = {
-                "code" : 500,
                 "msg" : "用户已存在"
             }
-            return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+            return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        new_user.set_password(password)
+        new_user.is_active = False
         new_user.save()
+
+        ''' 随机生成6位的验证码 '''
+        code_list = []
+        for i in range(10): # 0-9数字
+            code_list.append(str(i))
+        for i in range(65, 91): # A-Z
+            code_list.append(chr(i))
+        for i in range(97, 123): # a-z
+            code_list.append(chr(i))
+
+        myslice = random.sample(code_list, 6)  # 从list中随机获取6个元素，作为一个片断返回
+        verification_code = ''.join(myslice) # list to string
 
         profile = Profile.objects.create(
             user=new_user,
             balance=0,
-            stuId=stuId,
-            birth=birth,
-            sex=sex,
-            grade=grade,
-            major=major
+            verification_code=verification_code,
+            code_expires=datetime.strftime(datetime.now() + timedelta(days=2), "%Y-%m-%d %H:%M:%S")
         )
         profile.save()
 
+        # 发送邮件
+        email_subject = '来自 sysu_niffler 的注册确认邮件'
+        text_content = '''欢迎注册 sysu_niffler, 您的6位验证码是 %s''' % verification_code
+        msg = EmailMultiAlternatives(email_subject, text_content, settings.EMAIL_HOST_USER, [email])
+        msg.send()
+
         response_data = {
-            "code" : 200,
-            "msg" : "注册用户成功"
+            "msg" : "发送验证码成功"
         }
         return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
 
-    # if request.method == 'GET':
-        
+# 验证邮箱
+@csrf_exempt
+def email_verify(request, key):
+    response_data = {}
+    activation_expired = False
+    already_active = False
+    # print(key)
+    try:
+        profile = Profile.objects.get(verification_code=key)
+    except:
+        response_data = {
+            "msg" : "验证码错误"
+        }
+        return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    if profile.user.is_active == False:
+        if timezone.now() > profile.code_expires:
+            activation_expired = True #Display: offer the user to send a new activation link
+            id_user = profile.user.id
+            response_data = {
+                "msg" : "验证码过期"
+            }
+            return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        else: #Activation successful
+            profile.user.is_active = True
+            profile.user.save()
+            response_data = {
+                "msg" : "验证成功"
+            }
+            return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+    
+    #If user is already active, simply display error message
+    else:
+        already_active = True #Display : error message
+        response_data = {
+            "msg" : "用户已经验证"
+        }
+        return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 #  用户登录
 @csrf_exempt 
