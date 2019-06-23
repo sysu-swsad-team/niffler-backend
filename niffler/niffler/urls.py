@@ -23,7 +23,7 @@ urlpatterns = [
     path('accounts/', admin.site.urls), # for swagger
     path('register/', views.user_signup),
     path('verify/<key>', views.email_verify),
-    path('login/', views.user_login),
+    path('login/', views.Login.as_view()),
     path('logout/', views.user_logout),
     path('avatar/<image>',views.get_image),
     path('avatar/',views.user_avatar),

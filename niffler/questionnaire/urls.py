@@ -12,12 +12,13 @@ router.register('Participantship', views.ParticipantshipViewSet)
 router.register('tag', views.TagViewSet)
 
 # Create your views here.
-from rest_framework_swagger.views import get_swagger_view
-schema_view = get_swagger_view(title='Questionnaire API')
+# from rest_framework_swagger.views import get_swagger_view
+# schema_view = get_swagger_view(title='Questionnaire API')
+from .swagger_schema import schema_view
 
 # 使用自动 URL 路由连接我们的 API。
 urlpatterns = [
-    path('', schema_view),
+    path('swagger/', schema_view),
     path('api-auth/', include('rest_framework.urls',
                                namespace='rest_framework')),
     path('', include(router.urls)),

@@ -37,6 +37,9 @@ from django.core.mail import EmailMultiAlternatives
 from datetime import datetime, timedelta
 import random
 
+from rest_framework.decorators import api_view
+from .swagger_schema import CustomSchema
+
 class CsrfExemptSessionAuthentication(SessionAuthentication):
 
     def enforce_csrf(self, request):
@@ -59,7 +62,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 #  用户注册
-@csrf_exempt 
+@csrf_exempt
 def user_signup(request):
     response_data = {}
 
@@ -200,13 +203,26 @@ def email_verify(request, key):
         return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-#  用户登录
-@csrf_exempt 
-def user_login(request):
-    
-    if request.method == 'POST':
-
-        req = json.loads(request.body)
+class Login(APIView):
+    schema = CustomSchema()
+    def post(self, request, format=None):
+        """
+        desc: 用户登录
+        ret: （返回值）
+        err: （错误值）
+        input:
+        - name: email
+          desc: 用户名
+          type: string
+          required: true
+          location: form
+        - name: password
+          desc: 密码
+          type: string
+          required: true
+          location: form
+        """
+        req = request.data
         # logic to check username/password
         # username = request.POST.get('email')
         # password = request.POST.get('password')   
@@ -236,8 +252,8 @@ def user_login(request):
                 "profile" : None
             }
             return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
-    
-    return HttpResponse("Method is not POST.", status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+        return HttpResponse("Method is not POST.", status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 #  用户登出
