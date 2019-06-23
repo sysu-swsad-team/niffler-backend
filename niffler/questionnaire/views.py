@@ -13,6 +13,7 @@ from rest_framework.decorators import action
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication 
 
 from .models import *
+from django.db.models import Q
 from .serializers import *
 
 from rest_framework import viewsets
@@ -269,6 +270,19 @@ class TaskViewSet(viewsets.ModelViewSet):
         # print(self.request.user)
         queryset = Task.objects.all().order_by('created_date')
 
+        # 问卷 or 跑腿
+        task_type = self.request.query_params.get('type', None)
+
+        # 用户 or 所有
+        mine = self.request.query_params.get('mine', None)
+
+        if mine is not None and mine is not '':
+            user = self.request.user
+            queryset = queryset.filter(Q(issuer=user) | Q(participants=user))
+
+        if task_type is not None and task_type is not '':
+            queryset = queryset.filter(task_type=task_type)
+
         title = self.request.query_params.get('title', None)
         issuer_first_name = self.request.query_params.get('issuer', None)
 
@@ -285,14 +299,17 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         """
-        发布问卷
+        发布问卷 或 跑腿委托
         """
         user = request.user
         form = request.data
         available_balance = user.profile.available_balance
+        task_type = form['taskType'] # maybe also need check
+
         title = form['title']
-        description = form['description']
-        poll = form['question']
+        description = form['description']      
+        due_date = form['dueDate'] # maybe also need check
+
         try:
             fee = int(form['fee']) if form['fee'] else None
             participant_quota = int(form['maxNumber']) \
@@ -301,18 +318,6 @@ class TaskViewSet(viewsets.ModelViewSet):
             response_data = {
                 "code" : status.HTTP_400_BAD_REQUEST,
                 "msg" : "金额与参与名额必须为数字"
-            }
-            return HttpResponse(json.dumps(response_data), 
-                                status=status.HTTP_400_BAD_REQUEST)
-        due_date = form['dueDate'] # maybe also need check
-        task_type = form['taskType'] # maybe also need check
-        tag_set = form['tagSet'] # maybe also need check
-        try:
-            assert(tag_set == None or isinstance(tag_set, list))
-        except:
-            response_data = {
-                "code" : status.HTTP_400_BAD_REQUEST,
-                "msg" : "标签必须为空或数组"
             }
             return HttpResponse(json.dumps(response_data), 
                                 status=status.HTTP_400_BAD_REQUEST)
@@ -333,6 +338,23 @@ class TaskViewSet(viewsets.ModelViewSet):
                 return HttpResponse(json.dumps(response_data), 
                                         status=status.HTTP_400_BAD_REQUEST)
 
+        tag_set = form['tagSet'] # maybe also need check
+        try:
+            assert(tag_set == None or isinstance(tag_set, list))
+        except:
+            response_data = {
+                "code" : status.HTTP_400_BAD_REQUEST,
+                "msg" : "标签必须为空或数组"
+            }
+            return HttpResponse(json.dumps(response_data), 
+                                status=status.HTTP_400_BAD_REQUEST)
+
+
+        if task_type == '问卷':
+            poll = form['question']
+        else:
+            poll = ''
+      
         try:
             task = Task.objects.create(
                 issuer=user,
