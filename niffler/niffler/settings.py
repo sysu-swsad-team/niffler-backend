@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_swagger',
     'corsheaders',
-    'simple_email_confirmation',
     'questionnaire.apps.QuestionnaireConfig',
 ]
 
