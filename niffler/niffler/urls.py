@@ -22,7 +22,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', admin.site.urls), # for swagger
     path('register/', views.Signup.as_view()),
-    path('verify/<key>', views.email_verify),
     path('login/', views.Login.as_view()),
     path('logout/', views.user_logout),
     path('avatar/<image>',views.get_image),

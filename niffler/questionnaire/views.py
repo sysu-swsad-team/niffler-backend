@@ -110,6 +110,11 @@ class Signup(APIView):
           type: string
           required: true
           location: form
+        - name: code
+          desc: 验证码
+          type: string
+          required: true
+          location: form
         """
         req = request.data
 
@@ -121,39 +126,51 @@ class Signup(APIView):
         major = req.get('major')
         email = req.get('email')
         password = req.get('password')
+        verification_code = req.get('code')
 
-        
         try:
-            user = User.objects.get(email=email)
+            profile = Profile.objects.get(verification_code=verification_code)
         except:
             response_data = {
-                "msg" : "未验证邮箱"
+                "msg" : "验证码错误"
             }
             return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        if profile.user.is_active == False:
+            if timezone.now() > profile.code_expires:   
+                profile.user.delete()
+                profile.delete()
+                response_data = {
+                    "msg" : "验证码过期"
+                }
+                return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        if user.is_active == False:
+            else: #Activation successful
+                profile.user.is_active = True
+                profile.user.set_password(password)
+                profile.user.first_name = first_name
+                profile.user.save()
+
+                profile.stuId = stuId
+                profile.birth = birth
+                profile.sex = sex
+                profile.grade = grade
+                profile.major = major
+                profile.save()
+
+                response_data = {
+                    "msg" : "注册用户成功"
+                }
+                return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+        
+        #If user is already active, simply display error message
+        else:
             response_data = {
-                "msg" : "未验证邮箱"
+                "msg" : "该用户已经注册"
             }
             return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            
-        user.set_password(password)
-        user.first_name = first_name
-        user.save()
-
-        profile = Profile.objects.get(user=user)
-        profile.stuId = stuId
-        profile.birth = birth
-        profile.sex = sex
-        profile.grade = grade
-        profile.major = major
-        profile.save()
-           
-        response_data = {
-            "msg" : "注册用户成功"
-        }
-        return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
-    
+        
+    @csrf_exempt 
     def get(self, request, format=None):
         """
         desc: 邮箱验证
@@ -166,8 +183,8 @@ class Signup(APIView):
           required: true
           location: path
         """
-        email = request.data.get('email')
-        
+        email = request.GET['email']
+        # print(email)
         try:
             new_user = User.objects.create(
                 username=email,
@@ -180,8 +197,6 @@ class Signup(APIView):
             }
             return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        new_user.is_active = False
-        new_user.save()
 
         ''' 随机生成6位的验证码 '''
         code_list = []
@@ -205,8 +220,16 @@ class Signup(APIView):
         # 发送邮件
         email_subject = '来自 sysu_niffler 的注册确认邮件'
         text_content = '''欢迎注册 sysu_niffler, 您的6位验证码是 %s''' % verification_code
-        msg = EmailMultiAlternatives(email_subject, text_content, settings.EMAIL_HOST_USER, [email])
-        msg.send()
+        try:
+            msg = EmailMultiAlternatives(email_subject, text_content, settings.EMAIL_HOST_USER, [email])
+            msg.send()
+        except:
+            response_data = {
+                "msg" : "验证码发送失败"
+            }
+            new_user.delete()
+            profile.delete()
+            return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         response_data = {
             "msg" : "发送验证码成功"
@@ -214,44 +237,44 @@ class Signup(APIView):
         return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
       
 # 验证邮箱
-@csrf_exempt
-def email_verify(request, key):
-    response_data = {}
-    activation_expired = False
-    already_active = False
-    # print(key)
-    try:
-        profile = Profile.objects.get(verification_code=key)
-    except:
-        response_data = {
-            "msg" : "验证码错误"
-        }
-        return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+# @csrf_exempt
+# def email_verify(request, key):
+#     response_data = {}
+#     activation_expired = False
+#     already_active = False
+#     # print(key)
+#     try:
+#         profile = Profile.objects.get(verification_code=key)
+#     except:
+#         response_data = {
+#             "msg" : "验证码错误"
+#         }
+#         return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-    if profile.user.is_active == False:
-        if timezone.now() > profile.code_expires:
-            activation_expired = True #Display: offer the user to send a new activation link
-            id_user = profile.user.id
-            response_data = {
-                "msg" : "验证码过期"
-            }
-            return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+#     if profile.user.is_active == False:
+#         if timezone.now() > profile.code_expires:
+#             activation_expired = True #Display: offer the user to send a new activation link
+#             id_user = profile.user.id
+#             response_data = {
+#                 "msg" : "验证码过期"
+#             }
+#             return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        else: #Activation successful
-            profile.user.is_active = True
-            profile.user.save()
-            response_data = {
-                "msg" : "验证成功"
-            }
-            return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+#         else: #Activation successful
+#             profile.user.is_active = True
+#             profile.user.save()
+#             response_data = {
+#                 "msg" : "验证成功"
+#             }
+#             return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
     
-    #If user is already active, simply display error message
-    else:
-        already_active = True #Display : error message
-        response_data = {
-            "msg" : "用户已经验证"
-        }
-        return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+#     #If user is already active, simply display error message
+#     else:
+#         already_active = True #Display : error message
+#         response_data = {
+#             "msg" : "用户已经验证"
+#         }
+#         return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
 
 class Login(APIView):
