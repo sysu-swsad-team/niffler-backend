@@ -25,6 +25,7 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save
 import json
 import os
+from PIL import Image
 class CsrfExemptSessionAuthentication(SessionAuthentication):
 
     def enforce_csrf(self, request):
@@ -162,7 +163,6 @@ def user_logout(request):
 # 获取图像
 @csrf_exempt
 def get_image(request, image):
-    print(image)
     if request.method == 'GET':
             try:
                 with open('avatar/' + image, "rb") as f:
@@ -224,7 +224,7 @@ def user_avatar(request):
             with open(avatar.url, "rb") as f:
                 return HttpResponse(f.read(), content_type="image/jpeg", status=status.HTTP_200_OK)
         except IOError:
-            red = Image.new('RGBA', (1, 1), (255,0,0,0))
+            red = Image.new('RGB', (1, 1))
             response = HttpResponse(content_type="image/jpeg", status=status.HTTP_200_OK)
             red.save(response, "JPEG")
             return response
@@ -273,7 +273,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         issuer_id = self.request.query_params.get('issuer', None)
 
         if title is not None and title is not '':
-            queryset = queryset.filter(title=title)
+            queryset = queryset.filter(title__icontains=title)
         
         if issuer_id is not None and issuer_id is not '':
             try:

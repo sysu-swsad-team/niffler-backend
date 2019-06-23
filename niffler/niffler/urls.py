@@ -16,9 +16,15 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include,path
 from django.conf.urls import url
+from questionnaire import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('register/', views.user_signup),
+    path('login/', views.user_login),
+    path('logout/', views.user_logout),
+    path('avatar/<image>',views.get_image),
+    path('avatar/',views.user_avatar),
     path('questionnaire/', include('questionnaire.urls')),
 ]
 

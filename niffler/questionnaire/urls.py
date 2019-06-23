@@ -20,11 +20,5 @@ urlpatterns = [
     path('', schema_view),
     path('api-auth/', include('rest_framework.urls',
                                namespace='rest_framework')),
-    # path('login/', obtain_jwt_token),
-    path('register/', views.user_signup),
-    path('login/', views.user_login),
-    path('logout/', views.user_logout),
-    path('avatar/',views.user_avatar),
-    path('avatar/<image>',views.get_image),
     path('', include(router.urls)),
 ]
