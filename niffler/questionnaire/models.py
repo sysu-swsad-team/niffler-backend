@@ -57,6 +57,11 @@ from django.contrib.postgres.fields import JSONField
 
 CLAIMER_THRESHOLD = 10
 
+class EmailVerify(models.Model):
+    email = models.CharField(max_length=50, unique=True)
+    verification_code = models.CharField(max_length=40, default='123456')
+    code_expires = models.DateTimeField(blank=True, null=True)
+
 class Profile(models.Model):
     GenderChoices = (
         (u'女', u'女'),
@@ -72,9 +77,6 @@ class Profile(models.Model):
       return 'avatar/' + str(instance.user.id) + '.jpg'
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    verification_code = models.CharField(max_length=40, default='123456')
-    code_expires = models.DateTimeField(blank=True, null=True)
-
     phone = models.CharField(max_length=50, blank=True)
     balance = models.IntegerField(blank=True, default=10000)
     avatar = models.ImageField(upload_to=content_file_name, blank=True)
