@@ -270,17 +270,14 @@ class TaskViewSet(viewsets.ModelViewSet):
         queryset = Task.objects.all().order_by('created_date')
 
         title = self.request.query_params.get('title', None)
-        issuer_id = self.request.query_params.get('issuer', None)
+        issuer_first_name = self.request.query_params.get('issuer', None)
 
         if title is not None and title is not '':
             queryset = queryset.filter(title__icontains=title)
         
-        if issuer_id is not None and issuer_id is not '':
-            try:
-                user = User.objects.get(pk=issuer_id)
-                queryset = queryset.filter(issuer=user)
-            except:
-                return []
+        if issuer_first_name is not None and issuer_first_name is not '':
+            userset = User.objects.filter(first_name__icontains=issuer_first_name)
+            queryset = queryset.filter(issuer__in=userset)
 
         filtered = [x for x in queryset if x.status=='UNDERWAY' and x.task_type=='问卷']
 
