@@ -61,23 +61,58 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_class = UserFilter
 
 
-#  用户注册
-@csrf_exempt
-def user_signup(request):
+class Signup(APIView):
+    schema = CustomSchema()
     response_data = {}
+    def post(self, request, format=None):
+        """
+        desc: 用户注册
+        ret: code, msg
+        err: code, msg
+        input:
+        - name: name
+          desc: 名字
+          type: string
+          required: true
+          location: form
+        - name: stuId
+          desc: 学号
+          type: string
+          required: true
+          location: form
+        - name: birth
+          desc: 生日
+          type: string
+          required: true
+          location: form
+        - name: sex
+          desc: 性别
+          type: string
+          required: true
+          location: form
+        - name: grade
+          desc: 年级
+          type: string
+          required: true
+          location: form
+        - name: major
+          desc: 专业
+          type: string
+          required: true
+          location: form
+        - name: email
+          desc: 邮箱
+          type: string
+          required: true
+          location: form
+        - name: password
+          desc: 密码
+          type: string
+          required: true
+          location: form
+        """
+        req = request.data
 
-    if request.method == 'POST':
-        
-        req = json.loads(request.body)
-        # logic to check username/password
-        # username = request.POST.get('email')
-        # password = request.POST.get('password')   
-         # logic to check username/password
-        # username = request.POST['username']
-        # password = request.POST['password']
-        # email = request.POST['email']
-        # phone = request.POST['phone']
-        # avatar = request.FILES['avatar']
         first_name = req.get('name')
         stuId = req.get('stuId')
         birth = req.get('birth')
@@ -113,18 +148,29 @@ def user_signup(request):
         }
         return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
     
-    # 验证邮箱
-    if request.method == 'GET':
-        email = request.GET['email']
+    def get(self, request, format=None):
+        """
+        desc: 邮箱验证
+        ret: code, msg
+        err: code, msg
+        input:
+        - email: email
+          desc: 邮箱
+          type: string
+          required: true
+          location: path
+        """
+        email = request.data.get('email')
         
         try:
             new_user = User.objects.create(
                 username=email,
-                email=email
+                email=email,
+                is_active=False
             )
         except:
             response_data = {
-                "msg" : "用户已存在"
+                "msg" : "邮箱已注册"
             }
             return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -149,7 +195,6 @@ def user_signup(request):
             verification_code=verification_code,
             code_expires=datetime.strftime(datetime.now() + timedelta(days=2), "%Y-%m-%d %H:%M:%S")
         )
-        profile.save()
 
         # 发送邮件
         email_subject = '来自 sysu_niffler 的注册确认邮件'
@@ -161,7 +206,7 @@ def user_signup(request):
             "msg" : "发送验证码成功"
         }
         return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
-
+      
 # 验证邮箱
 @csrf_exempt
 def email_verify(request, key):
@@ -201,15 +246,15 @@ def email_verify(request, key):
             "msg" : "用户已经验证"
         }
         return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+        
 
 class Login(APIView):
     schema = CustomSchema()
     def post(self, request, format=None):
         """
         desc: 用户登录
-        ret: （返回值）
-        err: （错误值）
+        ret: code, msg, email, name, profile
+        err: code, msg, profile (None)
         input:
         - name: email
           desc: 用户名
