@@ -302,7 +302,7 @@ class Login(APIView):
         # password = request.POST.get('password')   
         email = req.get('email')
         password = req.get('password')
-
+        
         user = authenticate(username=email, password=password)  #用户验证
         if user:
             login(request, user)  #用户登录
@@ -346,11 +346,11 @@ def user_logout(request):
 @csrf_exempt
 def get_image(request, image):
     if request.method == 'GET':
-            try:
-                with open('avatar/' + image, "rb") as f:
-                    return HttpResponse(f.read(), content_type="image/jpeg", status=status.HTTP_200_OK)
-            except IOError:
-                return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+        try:
+            with open('avatar/' + image, "rb") as f:
+                return HttpResponse(f.read(), content_type="image/jpeg", status=status.HTTP_200_OK)
+        except IOError:
+            return HttpResponse(status=status.HTTP_404_NOT_FOUND)
 
 # 更改个人头像
 @csrf_exempt 
