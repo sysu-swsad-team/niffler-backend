@@ -147,6 +147,10 @@ class Task(models.Model):
         if self.remaining_quota == 0:
             return 'QUOTA FULL'
         return 'UNDERWAY'
+    
+    @property
+    def issuer_first_name(self):
+        return self.issuer.first_name
 
 
 PARTICIPANTSHIP_STATUS = [

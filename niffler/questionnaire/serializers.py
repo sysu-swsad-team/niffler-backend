@@ -33,7 +33,8 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'description', 'tag_set', 'poll', 'issuer', 
                   'fee', 'participant_quota', 'created_date', 'due_date', 
                   'participants', 'claimers', 'cancelled', 'task_type',
-                  'valid_participant_amount', 'remaining_quota', 'status')
+                  'valid_participant_amount', 'remaining_quota', 'status',
+                  'issuer_first_name')
         read_only_fields = ('issuer', 'claimers', 'cancelled')
 
 class ParticipantshipSerializer(serializers.HyperlinkedModelSerializer):
