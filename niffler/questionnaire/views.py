@@ -131,6 +131,12 @@ class Signup(APIView):
             }
             return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+        if user.is_active == False:
+            response_data = {
+                "msg" : "未验证邮箱"
+            }
+            return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
         user.set_password(password)
         user.first_name = first_name
         user.save()
