@@ -302,7 +302,7 @@ class Login(APIView):
         # password = request.POST.get('password')   
         email = req.get('email')
         password = req.get('password')
-        
+
         user = authenticate(username=email, password=password)  #用户验证
         if user:
             login(request, user)  #用户登录
@@ -450,10 +450,9 @@ class TaskViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         # print(self.request.user)
         queryset = Task.objects.all().order_by('created_date')
-
+        
         # 问卷 or 跑腿
         task_type = self.request.query_params.get('type', None)
-
         # 用户 or 所有
         mine = self.request.query_params.get('mine', None)
 

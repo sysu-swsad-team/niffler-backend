@@ -118,10 +118,10 @@ class Task(models.Model):
     cancelled = models.BooleanField(default=False)
     
     TASK_CHOICES = (
-        (u'问卷', u'问卷'),
-        (u'跑腿', u'跑腿'),
+        (u'questionnaire', u'questionnaire'),
+        (u'delegation', u'delegation'),
     )
-    task_type = models.CharField(max_length=4, choices=TASK_CHOICES, default='问卷')
+    task_type = models.CharField(max_length=4, choices=TASK_CHOICES, default='questionnaire')
 
 
     @property
@@ -149,6 +149,10 @@ class Task(models.Model):
         if self.remaining_quota == 0:
             return 'QUOTA FULL'
         return 'UNDERWAY'
+
+    @property
+    def issuer_first_name(self):
+      return self.issuer.first_name
 
 
 PARTICIPANTSHIP_STATUS = [
