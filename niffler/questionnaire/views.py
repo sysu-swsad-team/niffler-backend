@@ -52,13 +52,56 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_class = UserFilter
 
 
-#  用户注册
-@csrf_exempt
-def user_signup(request):
-    
-    if request.method == 'POST':
-        
-        req = json.loads(request.body)
+class Signup(APIView):
+    schema = CustomSchema()
+    def post(self, request, format=None):
+        """
+        desc: 用户注册
+        ret: code, msg
+        err: code, msg
+        input:
+        - name: name
+          desc: 名字
+          type: string
+          required: true
+          location: form
+        - name: stuId
+          desc: 学号
+          type: string
+          required: true
+          location: form
+        - name: birth
+          desc: 生日
+          type: string
+          required: true
+          location: form
+        - name: sex
+          desc: 性别
+          type: string
+          required: true
+          location: form
+        - name: grade
+          desc: 年级
+          type: string
+          required: true
+          location: form
+        - name: major
+          desc: 专业
+          type: string
+          required: true
+          location: form
+        - name: email
+          desc: 邮箱
+          type: string
+          required: true
+          location: form
+        - name: password
+          desc: 密码
+          type: string
+          required: true
+          location: form
+        """
+        req = request.data
         # logic to check username/password
         # username = request.POST.get('email')
         # password = request.POST.get('password')   
@@ -85,32 +128,39 @@ def user_signup(request):
             )
         except:
             response_data = {
-                "code" : 500,
+                "code" : status.HTTP_400_BAD_REQUEST,
                 "msg" : "用户已存在"
             }
-            return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+            return HttpResponse(json.dumps(response_data),
+                                status=status.HTTP_400_BAD_REQUEST)
 
         new_user.set_password(password)
-        new_user.save()
 
-        profile = Profile.objects.create(
-            user=new_user,
-            balance=0,
-            stuId=stuId,
-            birth=birth,
-            sex=sex,
-            grade=grade,
-            major=major
-        )
-        profile.save()
+        try:
+            profile = Profile.objects.create(
+                user=new_user,
+                balance=0,
+                stuId=stuId,
+                birth=birth,
+                sex=sex,
+                grade=grade,
+                major=major
+            )
+        except:
+            new_user.delete()
+            
+            response_data = {
+                "code" : status.HTTP_400_BAD_REQUEST,
+                "msg" : "格式错误"
+            }
+            return HttpResponse(json.dumps(response_data),
+                                status=status.HTTP_400_BAD_REQUEST)
 
         response_data = {
             "code" : 200,
             "msg" : "注册用户成功"
         }
         return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
-
-    # if request.method == 'GET':
         
 
 class Login(APIView):
@@ -118,8 +168,8 @@ class Login(APIView):
     def post(self, request, format=None):
         """
         desc: 用户登录
-        ret: （返回值）
-        err: （错误值）
+        ret: code, msg, email, name, profile
+        err: code, msg, profile (None)
         input:
         - name: email
           desc: 用户名
