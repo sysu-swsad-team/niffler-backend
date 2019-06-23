@@ -118,8 +118,8 @@ class Task(models.Model):
     cancelled = models.BooleanField(default=False)
     
     TASK_CHOICES = (
-        (u'questionnaire', u'questionnaire'),
-        (u'delegation', u'delegation'),
+        (u'问卷', u'问卷'),
+        (u'跑腿', u'跑腿'),
     )
     task_type = models.CharField(max_length=4, choices=TASK_CHOICES, default='questionnaire')
 

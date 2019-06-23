@@ -296,7 +296,7 @@ class Login(APIView):
           required: true
           location: form
         """
-        req = request.data
+        req = json.loads(request.body)
         # logic to check username/password
         # username = request.POST.get('email')
         # password = request.POST.get('password')   
