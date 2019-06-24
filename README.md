@@ -12,12 +12,17 @@ pip install -r requirements.txt
 ```bash
 python manage.py runserver
 ```
-open http://127.0.0.1:8000/questionnaire/
+Open http://127.0.0.1:8000/questionnaire/
 
 
 ## API Docs
 
-open http://127.0.0.1:8000/questionnaire/swagger/
+Open http://127.0.0.1:8000/questionnaire/swagger/
+
+
+## Admin Site
+
+Open http://127.0.0.1:8000/admin/
 
 
 ## Reference
