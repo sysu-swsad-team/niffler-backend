@@ -42,7 +42,8 @@ class ParticipantshipSerializer(serializers.HyperlinkedModelSerializer):
         model = Participantship
         fields = '__all__'
 
-class TagSerializer(serializers.HyperlinkedModelSerializer):
+# class TagSerializer(serializers.HyperlinkedModelSerializer):
+class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = '__all__'

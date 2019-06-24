@@ -9,7 +9,7 @@ router = routers.DefaultRouter()
 # router.register('task', views.TaskViewSet)
 # router.register('profile', views.ProfileViewSet)
 router.register('Participantship', views.ParticipantshipViewSet)
-router.register('tag', views.TagViewSet)
+# router.register('tag', views.TagViewSet)
 
 # Create your views here.
 # from rest_framework_swagger.views import get_swagger_view
@@ -28,5 +28,7 @@ urlpatterns = [
                                             'get': 'get',
                                             'post': 'create'
                                          })),
+    path('tag/', views.TagView.as_view({'get': 'get'})),
+    path('tag/<pk>', views.TagView.as_view({'get': 'retrieve'})),
     path('', include(router.urls)),
 ]
