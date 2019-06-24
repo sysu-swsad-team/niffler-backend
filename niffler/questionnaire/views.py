@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404, get_list_or_404
 from django.http import Http404
 from django.http import HttpResponse
 from django.contrib.auth import *
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User#, Group
 from django_filters.rest_framework import DjangoFilterBackend
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
@@ -36,20 +36,20 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
     def enforce_csrf(self, request):
         return  # To not perform the csrf check previously happening
         
-class UserFilter(django_filters.rest_framework.FilterSet):
-    class Meta:
-        model = User
-        fields = ['username']
+# class UserFilter(django_filters.rest_framework.FilterSet):
+#     class Meta:
+#         model = User
+#         fields = ['username']
 
-# ViewSets 定义视图行为。
-class UserViewSet(viewsets.ModelViewSet):
-    """
-    允许用户查看或编辑的 API 端点。
-    """
-    queryset = User.objects.all().order_by('-date_joined')
-    serializer_class = UserSerializer
-    filter_backends = (django_filters.rest_framework.DjangoFilterBackend,)
-    filter_class = UserFilter
+# # ViewSets 定义视图行为。
+# class UserViewSet(viewsets.ModelViewSet):
+#     """
+#     允许用户查看或编辑的 API 端点。
+#     """
+#     queryset = User.objects.all().order_by('-date_joined')
+#     serializer_class = UserSerializer
+#     filter_backends = (django_filters.rest_framework.DjangoFilterBackend,)
+#     filter_class = UserFilter
 
 
 class Signup(APIView):
@@ -194,7 +194,7 @@ class Login(APIView):
             login(request, user)  #用户登录
             request.session['user_id'] = user.id
             # user_serialized = UserSerializer(user)
-            profile_serialized = ProfileSerializer(Profile.objects.get(user=user))
+            profile_serialized = ProfileSerializer(user.profile)
 
             response_data = {
                 "code" : 200,
@@ -213,13 +213,13 @@ class Login(APIView):
             }
             return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
 
-        return HttpResponse("Method is not POST.", status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-
-#  用户登出
-@csrf_exempt 
+@api_view()
 @login_required
 def user_logout(request):
+    """
+    用户登出
+    """
     try:
         del request.session['user_id']
         request.session.flush()
@@ -228,66 +228,68 @@ def user_logout(request):
         pass
     return HttpResponse("You're logged out.")
 
-# 获取图像
-@csrf_exempt
-def get_image(request, image):
-    if request.method == 'GET':
-            try:
-                with open('avatar/' + image, "rb") as f:
-                    return HttpResponse(f.read(), content_type="image/jpeg", status=status.HTTP_200_OK)
-            except IOError:
-                return HttpResponse(status=status.HTTP_404_NOT_FOUND)
 
-# 更改个人头像
-@csrf_exempt 
-def user_avatar(request):
-    response_data = {}
-    if request.method == 'POST':
-        # req = json.loads(request.body)
-        # avatar = req.get('avatar')
-        # avatar = request.body
+class GetImage(APIView):
+    def get(self, request, image):
+        """
+        获取图片
+        """
+        try:
+            with open('avatar/' + image, "rb") as f:
+                return HttpResponse(f.read(), content_type="image/jpeg", status=status.HTTP_200_OK)
+        except IOError:
+            return HttpResponse(status=status.HTTP_404_NOT_FOUND)
 
-        # TODO: 用户验证。暂时使用了 or True
-        if request.user.is_authenticated or True:  
-            avatar = request.FILES['file']
-            #     with open('avatar/' + request.user.email + '.jpeg', 'wb+') as destination:
-            #         destination.write(avatar)
-            # except:
-            #     response_data = {
-            #         "code" : 500,
-            #         "msg" : "请求错误"
-            #     }
-            #     return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
 
-            # return HttpResponse(avatar, content_type="image/jpeg", status=status.HTTP_200_OK)
-        
-            if avatar:
-                # user_id = request.session['user_id']
-                # profile = Profile.objects.get(user=request.user)    
-                profile = Profile.objects.get(pk=1)
-                profile.avatar = avatar
-                profile.save()
-            # try:
-                response_data["msg"] = "头像更新成功"
-                response_data["profile"] = ProfileSerializer(Profile.objects.get(pk=1)).data
-                print(response_data)
-                return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
-            else:
-                response_data["msg"] = "请求错误"
-                print(response_data)
-                return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        else:
-            response_data["msg"] = "用户未登录"
-            print(response_data)
-            return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+class UserAvatar(APIView):
+    schema = CustomSchema()
     
-    if request.method == 'GET':
-        # user_id = request.session['user_id']
-        user = request.user
-        # user=User.objects.get(pk=user_id)
-        profile = Profile.objects.get(user=user)
-        avatar = profile.avatar
-        # print(avatar)
+    def post(self, request, format=None):
+        """
+        desc: 用户更新头像
+        ret: msg, profile
+        err: code, msg
+        input:
+        - name: file
+          desc: 图片文件
+          type: string
+          required: true
+          location: form
+        """
+        try: 
+            avatar = request.FILES['file']
+            profile = request.user.profile
+            profile.avatar = avatar
+            profile.save()
+        except:
+            response_data = {
+                "code" : status.HTTP_400_BAD_REQUEST,
+                "msg" : "未登录或文件错误"
+            }
+            return HttpResponse(json.dumps(response_data), status=status.HTTP_400_BAD_REQUEST)
+
+        response_data = {
+            "msg" : "头像更新成功",
+            "profile": ProfileSerializer(request.user.profile).data
+        }
+        return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+    
+    def get(self, request):
+        """
+        desc: 用户获取头像
+        ret: image
+        err: 404页面
+        """
+        try:
+            user = request.user
+            profile = user.profile
+            avatar = profile.avatar
+        except:
+            response_data = {
+                "code" : status.HTTP_404_NOT_FOUND,
+                "msg" : "未登录"
+            }
+            return HttpResponse(json.dumps(response_data), status=status.HTTP_404_NOT_FOUND)
         try:
             with open(avatar.url, "rb") as f:
                 return HttpResponse(f.read(), content_type="image/jpeg", status=status.HTTP_200_OK)
@@ -297,30 +299,39 @@ def user_avatar(request):
             red.save(response, "JPEG")
             return response
 
-        # user_id = request.session['user_id']
-        # profile = Profile.objects.get(user=User.objects.get(pk=user_id))
 
-        # response_data = {
-        #     "code" : 200,
-        #     "msg" : "获得头像 url 成功",
-        #     "avatar" : profile.avatar
-        # }
+# class GroupViewSet(viewsets.ModelViewSet):
+#     """
+#     允许组查看或编辑的 API 端点。
+#     """
+#     queryset = Group.objects.all()
+#     serializer_class = GroupSerializer
 
-        # return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
-
-
-class GroupViewSet(viewsets.ModelViewSet):
-    """
-    允许组查看或编辑的 API 端点。
-    """
-    queryset = Group.objects.all()
-    serializer_class = GroupSerializer
-
-class ProfileViewSet(viewsets.ModelViewSet):
-    authentication_classes = (SessionAuthentication, BasicAuthentication)
-    permission_classes = (IsAuthenticated,)
-    queryset = Profile.objects.all()
-    serializer_class = ProfileSerializer
+class ProfileView(APIView):
+    def get(self, request, id):
+        """
+        获取用户资料
+        """
+        try:
+            profile_serialized = ProfileSerializer(User.objects.get(pk=id).profile)
+            return HttpResponse(json.dumps(profile_serialized.data), status=status.HTTP_200_OK)
+        except:
+            return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+    
+    def get(self, request):
+        """
+        获取用户资料
+        """
+        try:
+            profile_serialized = ProfileSerializer(request.user.profile)
+            return HttpResponse(json.dumps(profile_serialized.data), status=status.HTTP_200_OK)
+        except:
+            return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+# class ProfileViewSet(viewsets.ModelViewSet):
+#     authentication_classes = (SessionAuthentication, BasicAuthentication)
+#     permission_classes = (IsAuthenticated,)
+#     queryset = Profile.objects.all()
+#     serializer_class = ProfileSerializer
 
 class TaskViewSet(viewsets.ModelViewSet):
     """

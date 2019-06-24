@@ -21,11 +21,11 @@ from questionnaire import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', admin.site.urls), # for swagger
-    path('register/', views.user_signup),
+    path('register/', views.Signup.as_view()),
     path('login/', views.Login.as_view()),
     path('logout/', views.user_logout),
-    path('avatar/<image>',views.get_image),
-    path('avatar/',views.user_avatar),
+    path('avatar/<image>',views.GetImage.as_view()),
+    path('avatar/',views.UserAvatar.as_view()),
     path('questionnaire/', include('questionnaire.urls')),
 ]
 

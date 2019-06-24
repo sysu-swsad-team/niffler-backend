@@ -1,0 +1,256 @@
+2019-06-22 09:53:30,402 Internal Server Error: /questionnaire/tag/highlight/
+Traceback (most recent call last):
+  File "/usr/local/python3/lib/python3.7/site-packages/django/core/handlers/exception.py", line 34, in inner
+    response = get_response(request)
+  File "/usr/local/python3/lib/python3.7/site-packages/django/core/handlers/base.py", line 126, in _get_response
+    response = self.process_exception_by_middleware(e, request)
+  File "/usr/local/python3/lib/python3.7/site-packages/django/core/handlers/base.py", line 124, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/usr/local/python3/lib/python3.7/site-packages/django/views/decorators/csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/viewsets.py", line 116, in view
+    return self.dispatch(request, *args, **kwargs)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/views.py", line 495, in dispatch
+    response = self.handle_exception(exc)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/views.py", line 455, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/views.py", line 492, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "/root/niffler-backend/niffler/questionnaire/views.py", line 452, in highlight
+    loggin.info(request)
+NameError: name 'loggin' is not defined
+2019-06-22 09:53:42,286 <rest_framework.request.Request object at 0x7ff0a7d61b00>
+2019-06-22 09:53:42,286 Bad Request: /questionnaire/tag/highlight/
+2019-06-22 09:54:31,882 None
+2019-06-22 09:54:31,883 Bad Request: /questionnaire/tag/highlight/
+2019-06-22 09:54:48,671 None
+2019-06-22 09:54:48,671 Bad Request: /questionnaire/tag/highlight/
+2019-06-22 09:55:07,284 None
+2019-06-22 09:55:07,285 Bad Request: /questionnaire/tag/highlight/
+2019-06-22 09:55:37,853 Forbidden: /questionnaire/task/1/
+2019-06-22 09:56:48,153 None
+2019-06-22 09:56:58,957 None
+2019-06-22 09:57:12,916 Forbidden: /questionnaire/task/
+2019-06-22 09:57:28,648 Not Found: /questionnaire/tag/highlight/
+2019-06-22 09:57:34,617 None
+2019-06-22 09:57:40,626 None
+2019-06-22 09:57:42,864 None
+2019-06-22 09:57:54,442 Forbidden: /questionnaire/task/
+2019-06-22 09:58:40,079 Forbidden: /questionnaire/task/
+2019-06-22 09:58:48,405 Forbidden: /questionnaire/task/
+2019-06-22 09:59:01,734 <QueryDict: {}>
+2019-06-22 10:02:36,348 Forbidden: /questionnaire/task/
+2019-06-22 10:05:34,400 Not Found: /questionnaire/tag/highlight/
+2019-06-22 10:05:43,651 <QueryDict: {}>
+2019-06-22 10:05:56,132 Forbidden: /questionnaire/task/
+2019-06-22 10:06:03,514 Forbidden: /questionnaire/task/
+2019-06-22 10:07:17,743 Forbidden: /questionnaire/task/
+2019-06-22 10:11:48,004 Forbidden: /questionnaire/task/
+2019-06-22 10:12:03,784 Internal Server Error: /questionnaire/task/
+Traceback (most recent call last):
+  File "/usr/local/python3/lib/python3.7/site-packages/django/core/handlers/exception.py", line 34, in inner
+    response = get_response(request)
+  File "/usr/local/python3/lib/python3.7/site-packages/django/core/handlers/base.py", line 126, in _get_response
+    response = self.process_exception_by_middleware(e, request)
+  File "/usr/local/python3/lib/python3.7/site-packages/django/core/handlers/base.py", line 124, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/usr/local/python3/lib/python3.7/site-packages/django/views/decorators/csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/viewsets.py", line 116, in view
+    return self.dispatch(request, *args, **kwargs)
+  File "/usr/local/python3/lib/python3.7/site-packages/django/views/decorators/csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "/root/niffler-backend/niffler/questionnaire/views.py", line 283, in dispatch
+    return super().dispatch(*args, **kwargs)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/views.py", line 495, in dispatch
+    response = self.handle_exception(exc)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/views.py", line 455, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/views.py", line 492, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "/root/niffler-backend/niffler/questionnaire/views.py", line 312, in create
+    logging.info(pretty_request(request))
+  File "/root/niffler-backend/niffler/questionnaire/views.py", line 274, in pretty_request
+    body=request.body,
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/request.py", line 412, in __getattr__
+    return getattr(self._request, attr)
+  File "/usr/local/python3/lib/python3.7/site-packages/django/http/request.py", line 275, in body
+    raise RawPostDataException("You cannot access body after reading from request's data stream")
+django.http.request.RawPostDataException: You cannot access body after reading from request's data stream
+2019-06-22 10:16:56,086 Internal Server Error: /questionnaire/task/
+Traceback (most recent call last):
+  File "/usr/local/python3/lib/python3.7/site-packages/django/core/handlers/exception.py", line 34, in inner
+    response = get_response(request)
+  File "/usr/local/python3/lib/python3.7/site-packages/django/core/handlers/base.py", line 126, in _get_response
+    response = self.process_exception_by_middleware(e, request)
+  File "/usr/local/python3/lib/python3.7/site-packages/django/core/handlers/base.py", line 124, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/usr/local/python3/lib/python3.7/site-packages/django/views/decorators/csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/viewsets.py", line 116, in view
+    return self.dispatch(request, *args, **kwargs)
+  File "/usr/local/python3/lib/python3.7/site-packages/django/views/decorators/csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "/root/niffler-backend/niffler/questionnaire/views.py", line 283, in dispatch
+    return super().dispatch(*args, **kwargs)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/views.py", line 495, in dispatch
+    response = self.handle_exception(exc)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/views.py", line 455, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/views.py", line 492, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "/root/niffler-backend/niffler/questionnaire/views.py", line 312, in create
+    logging.info(pretty_request(request))
+  File "/root/niffler-backend/niffler/questionnaire/views.py", line 274, in pretty_request
+    body=request.body,
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/request.py", line 412, in __getattr__
+    return getattr(self._request, attr)
+  File "/usr/local/python3/lib/python3.7/site-packages/django/http/request.py", line 275, in body
+    raise RawPostDataException("You cannot access body after reading from request's data stream")
+django.http.request.RawPostDataException: You cannot access body after reading from request's data stream
+2019-06-22 10:19:33,885 Forbidden: /questionnaire/task/
+2019-06-22 10:21:37,311 Forbidden: /questionnaire/task/
+2019-06-22 10:23:37,548 Not Found: /questionnaire/ta
+2019-06-22 10:23:41,423 Forbidden: /questionnaire/task/
+2019-06-22 10:23:45,172 Forbidden: /questionnaire/task/
+2019-06-22 10:25:41,840 Forbidden: /questionnaire/task/
+2019-06-22 10:25:52,348 Forbidden: /questionnaire/task/
+2019-06-22 10:30:50,679 Internal Server Error: /questionnaire/task/
+Traceback (most recent call last):
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/authentication.py", line 197, in authenticate_credentials
+    token = model.objects.select_related('user').get(key=key)
+AttributeError: type object 'Token' has no attribute 'objects'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/request.py", line 77, in wrap_attributeerrors
+    yield
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/request.py", line 223, in user
+    self._authenticate()
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/request.py", line 376, in _authenticate
+    user_auth_tuple = authenticator.authenticate(self)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/authentication.py", line 192, in authenticate
+    return self.authenticate_credentials(token)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/authentication.py", line 198, in authenticate_credentials
+    except model.DoesNotExist:
+AttributeError: type object 'Token' has no attribute 'DoesNotExist'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/python3/lib/python3.7/site-packages/django/core/handlers/exception.py", line 34, in inner
+    response = get_response(request)
+  File "/usr/local/python3/lib/python3.7/site-packages/django/core/handlers/base.py", line 126, in _get_response
+    response = self.process_exception_by_middleware(e, request)
+  File "/usr/local/python3/lib/python3.7/site-packages/django/core/handlers/base.py", line 124, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/usr/local/python3/lib/python3.7/site-packages/django/views/decorators/csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/viewsets.py", line 116, in view
+    return self.dispatch(request, *args, **kwargs)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/views.py", line 495, in dispatch
+    response = self.handle_exception(exc)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/views.py", line 455, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/views.py", line 483, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/views.py", line 400, in initial
+    self.perform_authentication(request)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/views.py", line 326, in perform_authentication
+    request.user
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/request.py", line 223, in user
+    self._authenticate()
+  File "/usr/local/python3/lib/python3.7/contextlib.py", line 130, in __exit__
+    self.gen.throw(type, value, traceback)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/request.py", line 81, in wrap_attributeerrors
+    six.reraise(type(exc), exc, info[2])
+  File "/usr/local/python3/lib/python3.7/site-packages/django/utils/six.py", line 683, in reraise
+    raise value.with_traceback(tb)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/request.py", line 77, in wrap_attributeerrors
+    yield
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/request.py", line 223, in user
+    self._authenticate()
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/request.py", line 376, in _authenticate
+    user_auth_tuple = authenticator.authenticate(self)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/authentication.py", line 192, in authenticate
+    return self.authenticate_credentials(token)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/authentication.py", line 198, in authenticate_credentials
+    except model.DoesNotExist:
+rest_framework.request.WrappedAttributeError: type object 'Token' has no attribute 'DoesNotExist'
+2019-06-22 10:31:44,907 Forbidden: /questionnaire/task/
+2019-06-22 10:32:05,786 Internal Server Error: /questionnaire/task/
+Traceback (most recent call last):
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/authentication.py", line 197, in authenticate_credentials
+    token = model.objects.select_related('user').get(key=key)
+AttributeError: type object 'Token' has no attribute 'objects'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/request.py", line 77, in wrap_attributeerrors
+    yield
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/request.py", line 223, in user
+    self._authenticate()
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/request.py", line 376, in _authenticate
+    user_auth_tuple = authenticator.authenticate(self)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/authentication.py", line 192, in authenticate
+    return self.authenticate_credentials(token)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/authentication.py", line 198, in authenticate_credentials
+    except model.DoesNotExist:
+AttributeError: type object 'Token' has no attribute 'DoesNotExist'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/python3/lib/python3.7/site-packages/django/core/handlers/exception.py", line 34, in inner
+    response = get_response(request)
+  File "/usr/local/python3/lib/python3.7/site-packages/django/core/handlers/base.py", line 126, in _get_response
+    response = self.process_exception_by_middleware(e, request)
+  File "/usr/local/python3/lib/python3.7/site-packages/django/core/handlers/base.py", line 124, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/usr/local/python3/lib/python3.7/site-packages/django/views/decorators/csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/viewsets.py", line 116, in view
+    return self.dispatch(request, *args, **kwargs)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/views.py", line 495, in dispatch
+    response = self.handle_exception(exc)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/views.py", line 455, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/views.py", line 483, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/views.py", line 400, in initial
+    self.perform_authentication(request)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/views.py", line 326, in perform_authentication
+    request.user
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/request.py", line 223, in user
+    self._authenticate()
+  File "/usr/local/python3/lib/python3.7/contextlib.py", line 130, in __exit__
+    self.gen.throw(type, value, traceback)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/request.py", line 81, in wrap_attributeerrors
+    six.reraise(type(exc), exc, info[2])
+  File "/usr/local/python3/lib/python3.7/site-packages/django/utils/six.py", line 683, in reraise
+    raise value.with_traceback(tb)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/request.py", line 77, in wrap_attributeerrors
+    yield
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/request.py", line 223, in user
+    self._authenticate()
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/request.py", line 376, in _authenticate
+    user_auth_tuple = authenticator.authenticate(self)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/authentication.py", line 192, in authenticate
+    return self.authenticate_credentials(token)
+  File "/usr/local/python3/lib/python3.7/site-packages/rest_framework/authentication.py", line 198, in authenticate_credentials
+    except model.DoesNotExist:
+rest_framework.request.WrappedAttributeError: type object 'Token' has no attribute 'DoesNotExist'
+2019-06-22 10:32:48,560 Forbidden: /questionnaire/task/
+2019-06-22 14:08:31,342 Not Found: /public/index.php
+2019-06-22 14:08:31,346 Not Found: /public/index.php
+2019-06-22 14:08:31,350 Not Found: /public/hydra.php
+2019-06-22 18:38:21,885 Not Found: /
+2019-06-22 21:48:19,639 Not Found: /public/index.php
+2019-06-22 21:48:19,643 Not Found: /public/index.php
+2019-06-22 21:48:19,647 Not Found: /public/hydra.php
+2019-06-23 01:30:43,044 Forbidden: /questionnaire/task/
+2019-06-23 01:32:54,566 Forbidden: /questionnaire/task/
+2019-06-23 01:35:52,024 Forbidden: /questionnaire/task/
+2019-06-23 01:42:21,357 Forbidden: /questionnaire/task/

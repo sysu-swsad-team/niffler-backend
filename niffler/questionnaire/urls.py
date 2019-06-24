@@ -4,10 +4,10 @@ from rest_framework import routers
 # from rest_framework_jwt.views import obtain_jwt_token
 # 路由器提供了一种自动确定 URL conf 的简便方法。
 router = routers.DefaultRouter()
-router.register('users', views.UserViewSet)
-router.register('group', views.GroupViewSet)
+# router.register('users', views.UserViewSet)
+# router.register('group', views.GroupViewSet)
 router.register('task', views.TaskViewSet)
-router.register('profile', views.ProfileViewSet)
+# router.register('profile', views.ProfileViewSet)
 router.register('Participantship', views.ParticipantshipViewSet)
 router.register('tag', views.TagViewSet)
 
@@ -21,5 +21,7 @@ urlpatterns = [
     path('swagger/', schema_view),
     path('api-auth/', include('rest_framework.urls',
                                namespace='rest_framework')),
+    path('profile/<id>', views.ProfileView.as_view()),
+    path('profile/', views.ProfileView.as_view()),
     path('', include(router.urls)),
 ]
