@@ -23,7 +23,7 @@ urlpatterns = [
                                namespace='rest_framework')),
     path('profile/<pk>', views.ProfileView.as_view({'get': 'retrieve'})),
     path('profile/', views.ProfileView.as_view({'get': 'get'})),
-    path('task/<id>', views.TaskView.as_view()),
-    path('task/', views.TaskView.as_view()),
+    path('task/<pk>', views.TaskView.as_view({'get': 'retrieve'})),
+    path('task/', views.TaskView.as_view({'get': 'get'})),
     path('', include(router.urls)),
 ]

@@ -491,9 +491,20 @@ class UserAvatar(APIView):
 
 
 class ProfileView(viewsets.ViewSet):
+    
+    schema = CustomSchema()
+    
     def retrieve(self, request, pk):
         """
-        获取用户资料
+        desc: 获取用户资料
+        ret: 用户资料
+        err: 404页面
+        input:
+        - name: id
+          desc: 用户id
+          type: string
+          required: true
+          location: path
         """
         try:
             profile_serialized = ProfileSerializer(User.objects.get(pk=pk).profile)
@@ -504,7 +515,9 @@ class ProfileView(viewsets.ViewSet):
     
     def get(self, request):
         """
-        获取用户资料
+        desc: 获取用户资料
+        ret: 用户资料
+        err: 404页面
         """
         try:
             profile_serialized = ProfileSerializer(request.user.profile)
@@ -521,7 +534,7 @@ class ProfileView(viewsets.ViewSet):
 #     serializer_class = ProfileSerializer
 
 
-class TaskView(APIView):
+class TaskView(viewsets.ViewSet):
     """
     允许 Task 查看或编辑的 API 端点。
     """
@@ -532,18 +545,19 @@ class TaskView(APIView):
     serializer_class = TaskSerializer
     schema = CustomSchema()
     
-    def get(self, request, id):
+    def retrieve(self, request, pk):
         """
         desc: 检索任务
         ret: 任务
+        err: 404页面
         input:
         - name: id
           desc: 任务id
           type: string
-          required: false
+          required: true
           location: path
         """
-        task = get_object_or_404(Task, pk=id)
+        task = get_object_or_404(Task, pk=pk)
         task_serialized = TaskSerializer(task)
         return HttpResponse(json.dumps(task_serialized.data), status=status.HTTP_200_OK)
 
@@ -558,7 +572,7 @@ class TaskView(APIView):
           required: false
           location: query
         - name: mine
-          desc: 用户 or 所有
+          desc: 不为空时表示用户发表或参与
           type: string
           required: false
           location: query
@@ -606,9 +620,6 @@ class TaskView(APIView):
         task_serialized = TaskSerializer(filtered, many=True)
         return HttpResponse(json.dumps(task_serialized.data), 
                             status=status.HTTP_200_OK)
-#         except:
-#             return HttpResponse(status=status.HTTP_404_NOT_FOUND)
-#         return filtered
 
     def create(self, request, *args, **kwargs):
         """
