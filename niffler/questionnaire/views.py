@@ -24,9 +24,18 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.dispatch import receiver
 from django.db.models.signals import post_save
+from django.core.mail import send_mail
+from django.utils.crypto import get_random_string
+from django.utils import timezone
+
 import json
-import os
+import os,smtplib
 from PIL import Image
+import hashlib
+from string import Template
+from django.core.mail import EmailMultiAlternatives
+from datetime import datetime, timedelta
+import random
 
 from rest_framework.decorators import api_view
 from .swagger_schema import CustomSchema
@@ -54,6 +63,9 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
 
 class Signup(APIView):
     schema = CustomSchema()
+    response_data = {}
+
+    @csrf_exempt 
     def post(self, request, format=None):
         """
         desc: 用户注册
@@ -100,17 +112,14 @@ class Signup(APIView):
           type: string
           required: true
           location: form
+        - name: code
+          desc: 验证码
+          type: string
+          required: true
+          location: form
         """
         req = request.data
-        # logic to check username/password
-        # username = request.POST.get('email')
-        # password = request.POST.get('password')   
-         # logic to check username/password
-        # username = request.POST['username']
-        # password = request.POST['password']
-        # email = request.POST['email']
-        # phone = request.POST['phone']
-        # avatar = request.FILES['avatar']
+
         first_name = req.get('name')
         stuId = req.get('stuId')
         birth = req.get('birth')
@@ -119,48 +128,212 @@ class Signup(APIView):
         major = req.get('major')
         email = req.get('email')
         password = req.get('password')
+        verification_code = req.get('code')
 
         try:
-            new_user = User.objects.create(
-                username=email,
-                email=email,
-                first_name=first_name
-            )
+            # profile = Profile.objects.get(verification_code=verification_code)
+            emailverify = EmailVerify.objects.get(email=email)
         except:
             response_data = {
-                "code" : status.HTTP_400_BAD_REQUEST,
-                "msg" : "用户已存在"
+                "msg" : "未为此邮箱生成验证码"
             }
-            return HttpResponse(json.dumps(response_data),
-                                status=status.HTTP_400_BAD_REQUEST)
+            return HttpResponse(json.dumps(response_data), status=status.HTTP_201_CREATED)
+        
+        if emailverify.verification_code == verification_code:
+            if timezone.now() > emailverify.code_expires: 
+                emailverify.delete()
+                response_data = {
+                    "msg" : "验证码过期"
+                }
+                return HttpResponse(json.dumps(response_data), status=status.HTTP_201_CREATED)
 
-        new_user.set_password(password)
+            else:
+                new_user = User.objects.create(
+                    username=email,
+                    email=email,
+                    first_name=first_name
+                )
+                new_user.set_password(password)
+                new_user.save()
 
-        try:
-            profile = Profile.objects.create(
-                user=new_user,
-                balance=0,
-                stuId=stuId,
-                birth=birth,
-                sex=sex,
-                grade=grade,
-                major=major
-            )
-        except:
-            new_user.delete()
-            
-            response_data = {
-                "code" : status.HTTP_400_BAD_REQUEST,
-                "msg" : "格式错误"
-            }
-            return HttpResponse(json.dumps(response_data),
-                                status=status.HTTP_400_BAD_REQUEST)
+                profile = Profile.objects.create(
+                    user=new_user,
+                    balance=0,
+                    stuId=stuId,
+                    birth=birth,
+                    sex=sex,
+                    grade=grade,
+                    major=major
+                )
+
+                emailverify.delete()
+                response_data = {
+                    "msg" : "注册用户成功"
+                }
+                return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
 
         response_data = {
-            "code" : 200,
-            "msg" : "注册用户成功"
+            "msg" : "验证码错误"
         }
-        return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+        return HttpResponse(json.dumps(response_data), status=status.HTTP_201_CREATED)
+        # if profile.user.is_active == False:
+        #     if timezone.now() > profile.code_expires:   
+        #         profile.user.delete()
+        #         profile.delete()
+        #         response_data = {
+        #             "msg" : "验证码过期"
+        #         }
+        #         return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        #     else: #Activation successful
+        #         profile.user.is_active = True
+        #         profile.user.set_password(password)
+        #         profile.user.first_name = first_name
+        #         profile.user.save()
+
+        #         profile.stuId = stuId
+        #         profile.birth = birth
+        #         profile.sex = sex
+        #         profile.grade = grade
+        #         profile.major = major
+        #         profile.save()
+
+        #         response_data = {
+        #             "msg" : "注册用户成功"
+        #         }
+        #         return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+        
+        # #If user is already active, simply display error message
+        # else:
+        #     response_data = {
+        #         "msg" : "该用户已经注册"
+        #     }
+        #     return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    @csrf_exempt 
+    def get(self, request, format=None):
+        """
+        desc: 邮箱验证
+        ret: code, msg
+        err: code, msg
+        input:
+        - email: email
+          desc: 邮箱
+          type: string
+          required: true
+          location: path
+        """
+        email = request.GET['email']
+        # print(email)  
+        if email is not None and email is not '':
+            try:
+                new_emailverify = EmailVerify.objects.create(
+                    email=email
+                )
+                # new_user = User.objects.create(
+                #     username=email,
+                #     email=email,
+                #     is_active=False
+                # )
+            except:
+                response_data = {
+                    "msg" : "已经发送验证码此邮箱中"
+                }
+                return HttpResponse(json.dumps(response_data), 
+                                    status=status.HTTP_201_CREATED)
+
+            ''' 随机生成6位的验证码 '''
+            code_list = []
+            for i in range(10): # 0-9数字
+                code_list.append(str(i))
+            for i in range(65, 91): # A-Z
+                code_list.append(chr(i))
+            for i in range(97, 123): # a-z
+                code_list.append(chr(i))
+
+            myslice = random.sample(code_list, 6)  # 从list中随机获取6个元素，作为一个片断返回
+            verification_code = ''.join(myslice) # list to string
+
+            new_emailverify.verification_code = verification_code
+            new_emailverify.code_expires=datetime.strftime(
+                datetime.now() + timedelta(days=2), "%Y-%m-%d %H:%M:%S")
+            new_emailverify.save()
+            # profile = Profile.objects.create(
+            #     user=new_user,
+            #     balance=0,
+            #     verification_code=verification_code,
+            #     code_expires=datetime.strftime(datetime.now() + timedelta(days=2), "%Y-%m-%d %H:%M:%S")
+            # )
+
+            # 发送邮件
+            email_subject = '来自 sysu_niffler 的注册确认邮件'
+            text_content = '''欢迎注册 sysu_niffler, 您的6位验证码是 %s''' % \
+                                                        verification_code
+            try:
+                msg = EmailMultiAlternatives(email_subject, 
+                                             text_content, 
+                                             settings.EMAIL_HOST_USER, [email])
+                msg.send()
+            except:
+                response_data = {
+                    "msg" : "验证码发送失败"
+                }
+                new_emailverify.delete()
+                return HttpResponse(json.dumps(response_data), 
+                                    status=status.HTTP_201_CREATED)
+
+            response_data = {
+                "msg" : "发送验证码成功"
+            }
+            return HttpResponse(json.dumps(response_data), 
+                                status=status.HTTP_200_OK)
+        
+        response_data = {
+            "msg" : "请输入邮箱地址"
+        }
+        return HttpResponse(json.dumps(response_data), 
+                            status=status.HTTP_201_CREATED)
+        
+      
+# 验证邮箱
+# @csrf_exempt
+# def email_verify(request, key):
+#     response_data = {}
+#     activation_expired = False
+#     already_active = False
+#     # print(key)
+#     try:
+#         profile = Profile.objects.get(verification_code=key)
+#     except:
+#         response_data = {
+#             "msg" : "验证码错误"
+#         }
+#         return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+#     if profile.user.is_active == False:
+#         if timezone.now() > profile.code_expires:
+#             activation_expired = True #Display: offer the user to send a new activation link
+#             id_user = profile.user.id
+#             response_data = {
+#                 "msg" : "验证码过期"
+#             }
+#             return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+#         else: #Activation successful
+#             profile.user.is_active = True
+#             profile.user.save()
+#             response_data = {
+#                 "msg" : "验证成功"
+#             }
+#             return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+    
+#     #If user is already active, simply display error message
+#     else:
+#         already_active = True #Display : error message
+#         response_data = {
+#             "msg" : "用户已经验证"
+#         }
+#         return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
 
 class Login(APIView):
@@ -182,7 +355,7 @@ class Login(APIView):
           required: true
           location: form
         """
-        req = request.data
+        req = json.loads(request.body)
         # logic to check username/password
         # username = request.POST.get('email')
         # password = request.POST.get('password')   
@@ -204,14 +377,16 @@ class Login(APIView):
                 "name" : user.first_name,
                 "profile" : profile_serialized.data
             }
-            return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+            return HttpResponse(json.dumps(response_data), 
+                                status=status.HTTP_200_OK)
         else:
             response_data = {
                 "code" : 500,
                 "msg" : "用户名（邮箱名）或密码不正确",
                 "profile" : None
             }
-            return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+            return HttpResponse(json.dumps(response_data), 
+                                status=status.HTTP_200_OK)
 
 
 @api_view()
@@ -236,10 +411,11 @@ class GetImage(APIView):
         """
         try:
             with open('avatar/' + image, "rb") as f:
-                return HttpResponse(f.read(), content_type="image/jpeg", status=status.HTTP_200_OK)
+                return HttpResponse(f.read(), 
+                                    content_type="image/jpeg",
+                                    status=status.HTTP_200_OK)
         except IOError:
             return HttpResponse(status=status.HTTP_404_NOT_FOUND)
-
 
 class UserAvatar(APIView):
     schema = CustomSchema()
@@ -266,13 +442,15 @@ class UserAvatar(APIView):
                 "code" : status.HTTP_400_BAD_REQUEST,
                 "msg" : "未登录或文件错误"
             }
-            return HttpResponse(json.dumps(response_data), status=status.HTTP_400_BAD_REQUEST)
+            return HttpResponse(json.dumps(response_data),
+                                status=status.HTTP_200_OK)
 
         response_data = {
             "msg" : "头像更新成功",
             "profile": ProfileSerializer(request.user.profile).data
         }
-        return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+        return HttpResponse(json.dumps(response_data),
+                            status=status.HTTP_200_OK)
     
     def get(self, request):
         """
@@ -289,13 +467,17 @@ class UserAvatar(APIView):
                 "code" : status.HTTP_404_NOT_FOUND,
                 "msg" : "未登录"
             }
-            return HttpResponse(json.dumps(response_data), status=status.HTTP_404_NOT_FOUND)
+            return HttpResponse(json.dumps(response_data), 
+                                status=status.HTTP_404_NOT_FOUND)
         try:
             with open(avatar.url, "rb") as f:
-                return HttpResponse(f.read(), content_type="image/jpeg", status=status.HTTP_200_OK)
-        except IOError:
+                return HttpResponse(f.read(),
+                                    content_type="image/jpeg",
+                                    status=status.HTTP_200_OK)
+        except IOError: # fail to find file
             red = Image.new('RGB', (1, 1))
-            response = HttpResponse(content_type="image/jpeg", status=status.HTTP_200_OK)
+            response = HttpResponse(content_type="image/jpeg", 
+                                    status=status.HTTP_200_OK)
             red.save(response, "JPEG")
             return response
 
@@ -307,6 +489,7 @@ class UserAvatar(APIView):
 #     queryset = Group.objects.all()
 #     serializer_class = GroupSerializer
 
+
 class ProfileView(APIView):
     def get(self, request, id):
         """
@@ -314,7 +497,8 @@ class ProfileView(APIView):
         """
         try:
             profile_serialized = ProfileSerializer(User.objects.get(pk=id).profile)
-            return HttpResponse(json.dumps(profile_serialized.data), status=status.HTTP_200_OK)
+            return HttpResponse(json.dumps(profile_serialized.data), 
+                                status=status.HTTP_200_OK)
         except:
             return HttpResponse(status=status.HTTP_404_NOT_FOUND)
     
@@ -324,14 +508,18 @@ class ProfileView(APIView):
         """
         try:
             profile_serialized = ProfileSerializer(request.user.profile)
-            return HttpResponse(json.dumps(profile_serialized.data), status=status.HTTP_200_OK)
+            return HttpResponse(json.dumps(profile_serialized.data), 
+                                status=status.HTTP_200_OK)
         except:
             return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+
+
 # class ProfileViewSet(viewsets.ModelViewSet):
 #     authentication_classes = (SessionAuthentication, BasicAuthentication)
 #     permission_classes = (IsAuthenticated,)
 #     queryset = Profile.objects.all()
 #     serializer_class = ProfileSerializer
+
 
 class TaskViewSet(viewsets.ModelViewSet):
     """
@@ -347,10 +535,9 @@ class TaskViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         # print(self.request.user)
         queryset = Task.objects.all().order_by('created_date')
-
+        
         # 问卷 or 跑腿
         task_type = self.request.query_params.get('type', None)
-
         # 用户 or 所有
         mine = self.request.query_params.get('mine', None)
 

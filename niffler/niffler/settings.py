@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import os
 import datetime
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -84,6 +85,15 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware', # 注意顺序
 ]
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.163.com'  # 邮箱服务地址 这里是163邮箱的
+EMAIL_PORT = 25  # 端口号
+EMAIL_HOST_USER = 'sysu_niffler@163.com'  # 邮箱帐号
+EMAIL_HOST_PASSWORD = 'niffler123'  # 邮箱授权密码
+DEFAULT_FROM_EMAIL = 'sysu_niffler@163.com'
+CONFIRM_DAYS = 7
+
 #跨域增加忽略
 CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_ALLOW_ALL = True

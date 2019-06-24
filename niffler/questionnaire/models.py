@@ -57,6 +57,10 @@ from django.contrib.postgres.fields import JSONField
 
 CLAIMER_THRESHOLD = 10
 
+class EmailVerify(models.Model):
+    email = models.CharField(max_length=50, unique=True)
+    verification_code = models.CharField(max_length=40, default='123456')
+    code_expires = models.DateTimeField(blank=True, null=True)
 
 class Profile(models.Model):
     GenderChoices = (
@@ -72,7 +76,7 @@ class Profile(models.Model):
     def content_file_name(instance, filename):
       return 'avatar/' + str(instance.user.id) + '.jpg'
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     phone = models.CharField(max_length=50, blank=True)
     balance = models.IntegerField(blank=True, default=10000)
     avatar = models.ImageField(upload_to=content_file_name, blank=True)
@@ -119,7 +123,7 @@ class Task(models.Model):
         (u'问卷', u'问卷'),
         (u'跑腿', u'跑腿'),
     )
-    task_type = models.CharField(max_length=4, choices=TASK_CHOICES, default='问卷')
+    task_type = models.CharField(max_length=4, choices=TASK_CHOICES, default='questionnaire')
 
 
     @property
@@ -147,10 +151,10 @@ class Task(models.Model):
         if self.remaining_quota == 0:
             return 'QUOTA FULL'
         return 'UNDERWAY'
-    
+
     @property
     def issuer_first_name(self):
-        return self.issuer.first_name
+      return self.issuer.first_name
 
 
 PARTICIPANTSHIP_STATUS = [

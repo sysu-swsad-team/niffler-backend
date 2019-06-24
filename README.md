@@ -7,15 +7,17 @@ cd niffler/
 pip install -r requirements.txt
 ```
 
-
-
 ## Run
 
 ```bash
 python manage.py runserver
-open 'http://127.0.0.1:8000/questionnaire/'
 ```
+open http://127.0.0.1:8000/questionnaire/
 
+
+## API Docs
+
+open http://127.0.0.1:8000/questionnaire/swagger/
 
 
 ## Reference
