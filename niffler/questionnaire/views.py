@@ -521,7 +521,7 @@ class ProfileView(APIView):
 #     serializer_class = ProfileSerializer
 
 
-class TaskViewSet(viewsets.ModelViewSet):
+class TaskView(APIView):
     """
     允许 Task 查看或编辑的 API 端点。
     """
@@ -529,27 +529,54 @@ class TaskViewSet(viewsets.ModelViewSet):
     # permission_classes = (IsAuthenticated,)
 
     queryset = Task.objects.all()
-    serializer_class = TaskSerializer     
+    serializer_class = TaskSerializer
+    schema = CustomSchema()
 
-    @action(detail=False, methods=['get'])
-    def get_queryset(self):
+    def get(self, request):
+        """
+        desc: 检索任务
+        ret: 任务列表
+        input:
+        - name: type
+          desc: 问卷 or 跑腿
+          type: string
+          required: false
+          location: query
+        - name: mine
+          desc: 用户 or 所有
+          type: string
+          required: false
+          location: query
+        - name: title
+          desc: 标题
+          type: string
+          required: false
+          location: query
+        - name: issuer
+          desc: 发起者名字
+          type: string
+          required: false
+          location: query
+        """
+        # maybe need pagination
+        
         # print(self.request.user)
         queryset = Task.objects.all().order_by('created_date')
         
         # 问卷 or 跑腿
-        task_type = self.request.query_params.get('type', None)
+        task_type = request.query_params.get('type', None)
         # 用户 or 所有
-        mine = self.request.query_params.get('mine', None)
+        mine = request.query_params.get('mine', None)
 
         if mine is not None and mine is not '':
-            user = self.request.user
+            user = request.user
             queryset = queryset.filter(Q(issuer=user) | Q(participants=user))
 
         if task_type is not None and task_type is not '':
             queryset = queryset.filter(task_type=task_type)
 
-        title = self.request.query_params.get('title', None)
-        issuer_first_name = self.request.query_params.get('issuer', None)
+        title = request.query_params.get('title', None)
+        issuer_first_name = request.query_params.get('issuer', None)
 
         if title is not None and title is not '':
             queryset = queryset.filter(title__icontains=title)
@@ -558,9 +585,15 @@ class TaskViewSet(viewsets.ModelViewSet):
             userset = User.objects.filter(first_name__icontains=issuer_first_name)
             queryset = queryset.filter(issuer__in=userset)
 
-        filtered = [x for x in queryset if x.status=='UNDERWAY' and x.task_type=='问卷']
-
-        return filtered
+        #filtered = [x for x in queryset if x.status=='UNDERWAY' and x.task_type=='问卷']
+        filtered = queryset
+        
+        task_serialized = TaskSerializer(filtered, many=True)
+        return HttpResponse(json.dumps(task_serialized.data), 
+                            status=status.HTTP_200_OK)
+#         except:
+#             return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+#         return filtered
 
     def create(self, request, *args, **kwargs):
         """

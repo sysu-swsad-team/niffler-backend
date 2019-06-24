@@ -6,7 +6,7 @@ from rest_framework import routers
 router = routers.DefaultRouter()
 # router.register('users', views.UserViewSet)
 # router.register('group', views.GroupViewSet)
-router.register('task', views.TaskViewSet)
+# router.register('task', views.TaskViewSet)
 # router.register('profile', views.ProfileViewSet)
 router.register('Participantship', views.ParticipantshipViewSet)
 router.register('tag', views.TagViewSet)
@@ -23,5 +23,6 @@ urlpatterns = [
                                namespace='rest_framework')),
     path('profile/<id>', views.ProfileView.as_view()),
     path('profile/', views.ProfileView.as_view()),
+    path('task/', views.TaskView.as_view()),
     path('', include(router.urls)),
 ]
