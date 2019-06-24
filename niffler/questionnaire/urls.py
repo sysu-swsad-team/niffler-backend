@@ -8,7 +8,7 @@ router = routers.DefaultRouter()
 # router.register('group', views.GroupViewSet)
 # router.register('task', views.TaskViewSet)
 # router.register('profile', views.ProfileViewSet)
-router.register('Participantship', views.ParticipantshipViewSet)
+# router.register('Participantship', views.ParticipantshipViewSet)
 # router.register('tag', views.TagViewSet)
 
 # Create your views here.
@@ -30,6 +30,10 @@ urlpatterns = [
                                          })),
     path('task/cancel/<pk>/', views.TaskView.as_view({'post': 'cancel'})),
     path('task/claim/<pk>/', views.TaskView.as_view({'post': 'claim'})),
+    path('participantship/<pk>/', views.ParticipantshipView.as_view(
+                                                    {'get': 'retrieve'})),
+    path('participantship/', views.ParticipantshipView.as_view(
+                                                    {'post': 'create'})),
     path('tag/', views.TagView.as_view({'get': 'get'})),
     path('tag/<pk>/', views.TagView.as_view({'get': 'retrieve'})),
     path('', include(router.urls)),

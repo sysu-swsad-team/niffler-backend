@@ -603,9 +603,6 @@ class ProfileView(viewsets.ViewSet):
 
 
 class TaskView(viewsets.ViewSet):
-    """
-    允许 Task 查看或编辑的 API 端点。
-    """
     # authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
     # permission_classes = (IsAuthenticated,)
 
@@ -915,13 +912,34 @@ class TaskView(viewsets.ViewSet):
     # """
     # 可以通过访问^users/{pk}/set_password/$来访问改视图
 
-
-class ParticipantshipViewSet(viewsets.ModelViewSet):
+    
+class ParticipantshipView(viewsets.ViewSet):
+    
     queryset = Participantship.objects.all()
     serializer_class = ParticipantshipSerializer
+    schema = CustomSchema()
+    # authentication_classes = (SessionAuthentication, BasicAuthentication)
+    # permission_classes = (IsAuthenticated,)
     
-    authentication_classes = (SessionAuthentication, BasicAuthentication)
-    permission_classes = (IsAuthenticated,)
+    def retrieve(self, request, pk):
+        """
+        desc: 获取指定参与
+        ret: 参与
+        err: 404页面
+        input:
+        - name: id
+          desc: 参与id
+          type: string
+          required: true
+          location: path
+        """
+        try:
+            participantship_serialized = ParticipantshipSerializer(
+                                            Participantship.objects.get(pk=pk))
+            return HttpResponse(json.dumps(participantship_serialized.data), 
+                                status=status.HTTP_200_OK)
+        except:
+            return HttpResponse(status=status.HTTP_404_NOT_FOUND)
 
     def create(self, request):
         response_data = {}

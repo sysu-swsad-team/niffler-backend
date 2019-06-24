@@ -44,7 +44,8 @@ class TaskSerializer(serializers.ModelSerializer):
                   'issuer_first_name')
         read_only_fields = ('issuer', 'claimers', 'cancelled')
 
-class ParticipantshipSerializer(serializers.HyperlinkedModelSerializer):
+# class ParticipantshipSerializer(serializers.HyperlinkedModelSerializer):
+class ParticipantshipSerializer(serializers.ModelSerializer):
     class Meta:
         model = Participantship
         fields = '__all__'
