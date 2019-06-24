@@ -782,6 +782,41 @@ class TaskView(viewsets.ViewSet):
         }
         return HttpResponse(json.dumps(response_data), 
                                 status=status.HTTP_201_CREATED)
+    
+    def cancel(self, request, pk):
+        """
+        desc: 取消任务，进行中的参与者得到报酬
+        ret: msg
+        err: 404页面/msg
+        input:
+        - name: id
+          desc: 任务id
+          type: string
+          required: true
+          location: path
+        """
+        task = get_object_or_404(Task, pk=pk)
+        user = request.user
+
+        try:
+            assert task.issuer == user, "当前用户非发布者"
+            assert task.status == 'QUOTA FULL' or \
+                    task.status == 'UNDERWAY', \
+                    "非进行中的任务"
+        except AssertionError as msg:
+            return HttpResponse(msg, status=status.HTTP_200_OK)
+
+#         # modify task status
+#         task.cancelled = True
+#         task.save()
+
+#         # pay participants fee
+#         if task.fee:
+#             for p in task.participants.all():
+#                 p.profile.balance += task.fee
+#                 p.profile.save()
+        
+        return HttpResponse("取消成功", status=status.HTTP_200_OK)
 
     # def update(self, request, pk=None):
     # 
@@ -861,9 +896,9 @@ class ParticipantshipViewSet(viewsets.ModelViewSet):
             return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
 
 
-class TagViewSet(viewsets.ModelViewSet):
-    queryset = Tag.objects.all()
-    serializer_class = TagSerializer
+# class TagViewSet(viewsets.ModelViewSet):
+#     queryset = Tag.objects.all()
+#     serializer_class = TagSerializer
 
 
 class TagView(viewsets.ViewSet):
