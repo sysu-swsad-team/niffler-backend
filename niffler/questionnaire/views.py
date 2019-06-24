@@ -573,7 +573,7 @@ class TaskView(viewsets.ViewSet):
           location: query
         - name: mine
           desc: 不为空时表示用户发表或参与
-          type: string
+          type: boolean
           required: false
           location: query
         - name: title
@@ -597,7 +597,8 @@ class TaskView(viewsets.ViewSet):
         # 用户 or 所有
         mine = request.query_params.get('mine', None)
 
-        if mine is not None and mine is not '':
+        if mine is not None and mine is not '' \
+                            and mine.lower() != 'false':
             user = request.user
             queryset = queryset.filter(Q(issuer=user) | Q(participants=user))
 
@@ -621,30 +622,75 @@ class TaskView(viewsets.ViewSet):
         return HttpResponse(json.dumps(task_serialized.data), 
                             status=status.HTTP_200_OK)
 
-    def create(self, request, *args, **kwargs):
+    def create(self, request):
         """
-        发布问卷 或 跑腿委托
+        desc: 发布问卷 或 跑腿委托
+        ret: code, msg
+        err: code, msg
+        input:
+        - name: taskType
+          desc: 问卷 or 跑腿
+          type: string
+          required: true
+          location: form
+        - name: title
+          desc: 标题
+          type: string
+          required: true
+          location: form
+        - name: description
+          desc: 描述
+          type: string
+          required: false
+          location: form
+        - name: dueDate
+          desc: 参与截止日期
+          type: string
+          required: false
+          location: form
+        - name: fee
+          desc: 每人报酬
+          type: integer
+          required: false
+          location: form
+        - name: maxNumber
+          desc: 参与限额
+          type: integer
+          required: false
+          location: form
+        - name: tagSet
+          desc: 标签名数组，标签名若不存在会创建
+          type: array
+          required: false
+          location: form
+        - name: question
+          desc: 问卷，taskType为问卷才有效
+          type: string
+          required: false
+          location: form
         """
         user = request.user
         form = request.data
         available_balance = user.profile.available_balance
-        task_type = form['taskType'] # maybe also need check
-
-        title = form['title']
-        description = form['description']      
-        due_date = form['dueDate'] # maybe also need check
+        
+        # belows auto checked by models
+        task_type = form.get('taskType', None)
+        title = form.get('title', None)
+        description = form.get('description', None)
+        due_date = form.get('dueDate', None)
 
         try:
-            fee = int(form['fee']) if form['fee'] else None
-            participant_quota = int(form['maxNumber']) \
-                           if form['maxNumber'] else None
+            fee = int(form.get('fee', None)) \
+                            if form.get('fee', None) else None
+            participant_quota = int(form.get('maxNumber', None)) \
+                      if form.get('maxNumber', None) else None
         except:
             response_data = {
                 "code" : status.HTTP_400_BAD_REQUEST,
                 "msg" : "金额与参与名额必须为数字"
             }
             return HttpResponse(json.dumps(response_data), 
-                                status=status.HTTP_400_BAD_REQUEST)
+                                status=status.HTTP_200_OK)
 
         if fee:
             if not participant_quota:
@@ -653,16 +699,16 @@ class TaskView(viewsets.ViewSet):
                     "msg" : "设定金额时必须同时设定参与名额"
                 }
                 return HttpResponse(json.dumps(response_data), 
-                                        status=status.HTTP_400_BAD_REQUEST)
+                                        status=status.HTTP_200_OK)
             if available_balance < fee * participant_quota:
                 response_data = {
                     "code" : status.HTTP_400_BAD_REQUEST,
                     "msg" : "可用余额不足"
                 }
                 return HttpResponse(json.dumps(response_data), 
-                                        status=status.HTTP_400_BAD_REQUEST)
+                                        status=status.HTTP_200_OK)
 
-        tag_set = form['tagSet'] # maybe also need check
+        tag_set = form.get('tagSet', None) # maybe also need check
         try:
             assert(tag_set == None or isinstance(tag_set, list))
         except:
@@ -671,11 +717,11 @@ class TaskView(viewsets.ViewSet):
                 "msg" : "标签必须为空或数组"
             }
             return HttpResponse(json.dumps(response_data), 
-                                status=status.HTTP_400_BAD_REQUEST)
+                                status=status.HTTP_200_OK)
 
 
         if task_type == '问卷':
-            poll = form['question']
+            poll = form.get('question', None)
         else:
             poll = ''
       
@@ -702,10 +748,10 @@ class TaskView(viewsets.ViewSet):
         except:
             response_data = {
                 "code" : status.HTTP_500_INTERNAL_SERVER_ERROR,
-                "msg" : "发布失败"
+                "msg" : "发布失败，字段异常"
             }
             return HttpResponse(json.dumps(response_data), 
-                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                                status=status.HTTP_200_OK)
 
         response_data = {
             "code" : status.HTTP_201_CREATED,
