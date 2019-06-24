@@ -378,7 +378,7 @@ class Login(APIView):
           required: true
           location: form
         """
-        req = json.loads(request.body)
+        req = request.data
         # logic to check username/password
         # username = request.POST.get('email')
         # password = request.POST.get('password')   
@@ -477,7 +477,7 @@ class UserAvatar(APIView):
     
     def get(self, request):
         """
-        desc: 用户获取头像
+        desc: 获取当前用户头像
         ret: image
         err: 404页面
         """
@@ -538,7 +538,7 @@ class ProfileView(viewsets.ViewSet):
     
     def get(self, request):
         """
-        desc: 获取用户资料
+        desc: 获取当前用户资料
         ret: 用户资料
         err: 404页面
         """
@@ -570,7 +570,7 @@ class TaskView(viewsets.ViewSet):
     
     def retrieve(self, request, pk):
         """
-        desc: 检索任务
+        desc: 获取指定任务
         ret: 任务
         err: 404页面
         input:
@@ -586,7 +586,7 @@ class TaskView(viewsets.ViewSet):
 
     def get(self, request):
         """
-        desc: 检索任务
+        desc: 检索所有任务
         ret: 任务列表
         input:
         - name: type
@@ -864,6 +864,43 @@ class ParticipantshipViewSet(viewsets.ModelViewSet):
 class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+
+
+class TagView(viewsets.ViewSet):
+    
+    schema = CustomSchema()
+    
+    def retrieve(self, request, pk):
+        """
+        desc: 获取指定标签
+        ret: 标签
+        err: 404页面
+        input:
+        - name: id
+          desc: 标签id
+          type: string
+          required: true
+          location: path
+        """
+        try:
+            tag_serialized = TagSerializer(Tag.objects.get(pk=pk))
+            return HttpResponse(json.dumps(tag_serialized.data), 
+                                status=status.HTTP_200_OK)
+        except:
+            return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+    
+    def get(self, request):
+        """
+        desc: 获取所有标签
+        ret: 标签
+        err: 404页面
+        """
+        try:
+            tag_serialized = TagSerializer(Tag.objects.all(), many=True)
+            return HttpResponse(json.dumps(tag_serialized.data), 
+                                status=status.HTTP_200_OK)
+        except:
+            return HttpResponse(status=status.HTTP_404_NOT_FOUND)
 
 # def UserLogin():
 

@@ -9,8 +9,7 @@ router = routers.DefaultRouter()
 # router.register('task', views.TaskViewSet)
 # router.register('profile', views.ProfileViewSet)
 router.register('Participantship', views.ParticipantshipViewSet)
-router.register('tag', views.TagViewSet)
-# router.register('emailverify', views.EmailVerifyViewSet)
+# router.register('tag', views.TagViewSet)
 
 # Create your views here.
 # from rest_framework_swagger.views import get_swagger_view
@@ -22,12 +21,14 @@ urlpatterns = [
     path('swagger/', schema_view),
     path('api-auth/', include('rest_framework.urls',
                                namespace='rest_framework')),
-    path('profile/<pk>', views.ProfileView.as_view({'get': 'retrieve'})),
+    path('profile/<pk>/', views.ProfileView.as_view({'get': 'retrieve'})),
     path('profile/', views.ProfileView.as_view({'get': 'get'})),
-    path('task/<pk>', views.TaskView.as_view({'get': 'retrieve'})),
+    path('task/<pk>/', views.TaskView.as_view({'get': 'retrieve'})),
     path('task/', views.TaskView.as_view({
                                             'get': 'get',
                                             'post': 'create'
                                          })),
+    path('tag/', views.TagView.as_view({'get': 'get'})),
+    path('tag/<pk>/', views.TagView.as_view({'get': 'retrieve'})),
     path('', include(router.urls)),
 ]
