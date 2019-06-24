@@ -29,7 +29,10 @@ from django.utils.crypto import get_random_string
 from django.utils import timezone
 
 import json
-import os,smtplib
+import os, smtplib, ssl
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.header import Header
 from PIL import Image
 import hashlib
 from string import Template
@@ -130,7 +133,7 @@ class Signup(APIView):
         email = req.get('email')
         password = req.get('password')
         verification_code = req.get('code')
-        print(email)
+        # print(email)
         try:
             # profile = Profile.objects.get(verification_code=verification_code)
             emailverify = EmailVerify.objects.get(email=email)
@@ -139,8 +142,8 @@ class Signup(APIView):
                 "msg" : "未为此邮箱生成验证码"
             }
             return HttpResponse(json.dumps(response_data), status=status.HTTP_201_CREATED)
-        print(verification_code)
-        print(emailverify.verification_code)
+        # print(verification_code)
+        # print(emailverify.verification_code)
         if emailverify.verification_code == verification_code:
             if timezone.now() > emailverify.code_expires: 
                 emailverify.delete()
@@ -292,12 +295,55 @@ class Signup(APIView):
             email_subject = '来自 sysu_niffler 的注册确认邮件'
             text_content = '''欢迎注册 sysu_niffler, 您的6位验证码是 %s''' % \
                                                         verification_code
+            
+            # 三个参数：第一个为文本内容，第二个 plain 设置文本格式，第三个 utf-8 设置编码
+            # message = MIMEText(text_content, 'html', 'utf-8')
+            # message['Subject'] = Header(email_subject, 'utf-8')
+
+            
+            # Create the plain-text and HTML version of your message
+            # text = """\
+            # Hi,
+            # How are you?
+            # Real Python has many great tutorials:
+            # www.realpython.com"""
+            # html = """\
+            # <html>
+            # <body>
+            #     <p>Hi,<br>
+            #     How are you?<br>
+            #     <a href="http://www.realpython.com">Real Python</a> 
+            #     has many great tutorials.
+            #     </p>
+            # </body>
+            # </html>
+            # """
+            # # Turn these into plain/html MIMEText objects
+            # part1 = MIMEText(text, "plain")
+            # part2 = MIMEText(html, "html")
+
+            # # Add HTML/plain-text parts to MIMEMultipart message
+            # # The email client will try to render the last part first
+            # message = MIMEMultipart("alternative")
+            # message.attach(part1)
+            # message.attach(part2)
+          
             try:
-                msg = EmailMultiAlternatives(email_subject, 
-                                             text_content, 
-                                             settings.EMAIL_HOST_USER, [email])
-                msg.send()
-            except:
+                # msg = EmailMultiAlternatives(email_subject, 
+                #                              text_content, 
+                #                              settings.EMAIL_HOST_USER, [email])
+                # msg.send()
+
+                # send_mail(email_subject, text_content, settings.EMAIL_HOST_USER, [email], fail_silently=False)
+
+                #  initiate a TLS-encrypted connection
+                context = ssl.create_default_context()
+                with smtplib.SMTP_SSL(settings.EMAIL_HOST, settings.EMAIL_PORT, context=context) as server:
+                    server.login(settings.DEFAULT_FROM_EMAIL, settings.EMAIL_HOST_PASSWORD)
+                    # TODO: Send email here
+                    server.sendmail(settings.DEFAULT_FROM_EMAIL, [email], message.as_string())
+            except Exception as e:
+                print(e)
                 response_data = {
                     "msg" : "验证码发送失败"
                 }
