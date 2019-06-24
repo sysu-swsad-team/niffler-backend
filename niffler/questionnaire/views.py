@@ -490,13 +490,13 @@ class UserAvatar(APIView):
 #     serializer_class = GroupSerializer
 
 
-class ProfileView(APIView):
-    def get(self, request, id):
+class ProfileView(viewsets.ViewSet):
+    def retrieve(self, request, pk):
         """
         获取用户资料
         """
         try:
-            profile_serialized = ProfileSerializer(User.objects.get(pk=id).profile)
+            profile_serialized = ProfileSerializer(User.objects.get(pk=pk).profile)
             return HttpResponse(json.dumps(profile_serialized.data), 
                                 status=status.HTTP_200_OK)
         except:
@@ -531,6 +531,21 @@ class TaskView(APIView):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
     schema = CustomSchema()
+    
+    def get(self, request, id):
+        """
+        desc: 检索任务
+        ret: 任务
+        input:
+        - name: id
+          desc: 任务id
+          type: string
+          required: false
+          location: path
+        """
+        task = get_object_or_404(Task, pk=id)
+        task_serialized = TaskSerializer(task)
+        return HttpResponse(json.dumps(task_serialized.data), status=status.HTTP_200_OK)
 
     def get(self, request):
         """
@@ -690,17 +705,17 @@ class TaskView(APIView):
 
     # def update(self, request, pk=None):
     # 
-    def retrieve(self, request, pk=None):
-        task = get_object_or_404(Task, pk=pk)
-        task_serialized = TaskSerializer(task)
-        return HttpResponse(json.dumps(task_serialized.data), status=status.HTTP_200_OK)
+    # def retrieve(self, request, pk=None):
+    #     task = get_object_or_404(Task, pk=pk)
+    #     task_serialized = TaskSerializer(task)
+    #     return HttpResponse(json.dumps(task_serialized.data), status=status.HTTP_200_OK)
 
     # def partial_update(self, request, pk=None):
     # pass
-    def destroy(self, request, pk=None):
-        task = get_object_or_404(Task, pk=pk)
-        task.delete()
-        return HttpResponse(status=status.HTTP_200_OK)
+    # def destroy(self, request, pk=None):
+    #     task = get_object_or_404(Task, pk=pk)
+    #     task.delete()
+    #     return HttpResponse(status=status.HTTP_200_OK)
     # """
     # 如果你有特别的需要被路由到的方法,可以将它们标记为需要路由使用@detail_route或@list_route修饰符。
     # """

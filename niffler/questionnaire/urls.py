@@ -21,8 +21,9 @@ urlpatterns = [
     path('swagger/', schema_view),
     path('api-auth/', include('rest_framework.urls',
                                namespace='rest_framework')),
-    path('profile/<id>', views.ProfileView.as_view()),
-    path('profile/', views.ProfileView.as_view()),
+    path('profile/<pk>', views.ProfileView.as_view({'get': 'retrieve'})),
+    path('profile/', views.ProfileView.as_view({'get': 'get'})),
+    path('task/<id>', views.TaskView.as_view()),
     path('task/', views.TaskView.as_view()),
     path('', include(router.urls)),
 ]
