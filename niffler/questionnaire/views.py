@@ -741,7 +741,16 @@ class TaskView(viewsets.ViewSet):
         # belows auto checked by models
         task_type = form.get('taskType', None)
         title = form.get('title', None)
-        description = form.get('description', None)
+        
+        if not title:
+            response_data = {
+                "code" : status.HTTP_400_BAD_REQUEST,
+                "msg" : "标题不能为空"
+            }
+            return HttpResponse(json.dumps(response_data), 
+                                status=status.HTTP_200_OK)
+        
+        description = form.get('description', '')
         due_date = form.get('dueDate', None)
 
         try:
@@ -786,7 +795,7 @@ class TaskView(viewsets.ViewSet):
 
 
         if task_type == '问卷':
-            poll = form.get('question', None)
+            poll = form.get('question', '')
         else:
             poll = ''
       
@@ -844,9 +853,13 @@ class TaskView(viewsets.ViewSet):
             assert task.issuer == user, "当前用户非发布者"
             assert task.status == 'QUOTA FULL' or \
                     task.status == 'UNDERWAY', \
-                    "非进行中的任务"
+                    "无法取消非进行中的任务"
         except AssertionError as msg:
-            return HttpResponse(msg, status=status.HTTP_200_OK)
+            response_data = {
+                "msg" : str(msg)
+            }
+            return HttpResponse(json.dumps(response_data),
+                                    status=status.HTTP_200_OK)
 
         # modify task status
         task.cancelled = True
@@ -858,7 +871,11 @@ class TaskView(viewsets.ViewSet):
                 p.profile.balance += task.fee
                 p.profile.save()
         
-        return HttpResponse("取消成功", status=status.HTTP_200_OK)
+        response_data = {
+            "msg" : "取消成功"
+        }
+        return HttpResponse(json.dumps(response_data),
+                                status=status.HTTP_200_OK)
     
     def claim(self, request, pk):
         """
@@ -876,6 +893,7 @@ class TaskView(viewsets.ViewSet):
         user = request.user
 
         try:
+            assert user.id, "未登录"
             assert task.issuer != user, "无法自我举报"
             assert not task.claimers.filter(pk=user.pk).exists(), \
                     "无法重复举报"
@@ -883,11 +901,21 @@ class TaskView(viewsets.ViewSet):
                     task.status == 'UNDERWAY', \
                     "非进行中的任务"
         except AssertionError as msg:
-            return HttpResponse(msg, status=status.HTTP_200_OK)
+            response_data = {
+                "msg" : str(msg)
+            }
+            return HttpResponse(json.dumps(response_data),
+                                    status=status.HTTP_200_OK)
 
         # add claimers
         task.claimers.add(user)
-        return HttpResponse("举报成功", status=status.HTTP_200_OK)
+        
+        response_data = {
+            "msg" : "举报成功"
+        }
+        return HttpResponse(json.dumps(response_data),
+                                status=status.HTTP_200_OK)
+
 
     # def update(self, request, pk=None):
     # 
@@ -942,50 +970,85 @@ class ParticipantshipView(viewsets.ViewSet):
             return HttpResponse(status=status.HTTP_404_NOT_FOUND)
 
     def create(self, request):
-        response_data = {}
-        if request.method == 'POST':
-            user = request.user
-            form = json.loads(request.body)
+        """
+        desc: 参与任务
+        ret: msg
+        err: msg
+        input:
+        - name: task_id
+          desc: 任务id
+          type: string
+          required: true
+          location: form
+        - name: description
+          desc: 参与备注
+          type: string
+          required: false
+          location: form
+        - name: poll
+          desc: 问卷
+          type: string
+          required: false
+          location: form
+        """
+        user = request.user
+        form = request.data
 
-            task_id = form['task_id']
+        try:
+            task_id = form.get('task_id', None)
             task = Task.objects.get(pk=task_id)
-            task_status = task.status
+        except:
+            response_data = {
+                "msg" : "任务不存在"
+            }
+            return HttpResponse(json.dumps(response_data),
+                                status=status.HTTP_200_OK)
 
-            if task_status == 'INVALID':
-                response_data['code'] = 500
-                response_data['msg'] = "问卷存在争议"
-                return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
-            elif task_status == 'CANCELLED':
-                response_data['code'] = 500
-                response_data['msg'] = "问卷被发布者取消"
-                return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
-            elif task_status == 'CLOSED':
-                response_data['code'] = 500
-                response_data['msg'] = "问卷已经过截至日期"
-                return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
-            elif task_status == 'QUOTA FULL':
-                response_data['code'] = 500
-                response_data['msg'] = "问卷参与人数已满"
-                return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
-            
-            description = task.description
-            poll = form['poll']
-            rate = int(form['rate'])
-            comment = form['comment']
+        task_status = task.status
 
-            participantship = Participantship.objects.create(
+        try:
+            assert task_status != 'INVALID', "问卷存在争议"
+            assert task_status != 'CANCELLED', "问卷被发布者取消"
+            assert task_status != 'CLOSED', "问卷已经过截至日期"
+            assert task_status != 'QUOTA FULL', "问卷参与人数已满"
+            assert user.id, "未登录"
+            assert task.issuer != user, "无法自我参与"
+        except AssertionError as msg:
+            response_data = {
+                "msg" : str(msg)
+            }
+            return HttpResponse(json.dumps(response_data),
+                                status=status.HTTP_200_OK)
+
+        description = form.get('description', '')
+        poll = form.get('poll', '')
+        comment = ''
+
+        try:
+            Participantship.objects.create(
                 user=user,
                 task=task,
                 description=description,
                 poll=poll,
-                rate=rate,
                 comment=comment
             )
-            participantship.save()
+            # task issuer's balance is deducted 1 * fee
+            if task.fee:
+                task.issuer.profile.balance -= task.fee
+                task.issuer.profile.save()
+        except:
+            response_data = {
+                "msg" : "参与失败"
+            }
+            return HttpResponse(json.dumps(response_data),
+                                status=status.HTTP_200_OK)
 
-            response_data['code'] = 200
-            response_data['msg'] = "参与问卷成功"
-            return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+        response_data = {
+            "msg" : "参与成功"
+        }
+        return HttpResponse(json.dumps(response_data),
+                            status=status.HTTP_200_OK)
+        
 
 
 # class TagViewSet(viewsets.ModelViewSet):
