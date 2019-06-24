@@ -29,6 +29,7 @@ urlpatterns = [
                                             'post': 'create'
                                          })),
     path('task/cancel/<pk>/', views.TaskView.as_view({'post': 'cancel'})),
+    path('task/claim/<pk>/', views.TaskView.as_view({'post': 'claim'})),
     path('tag/', views.TagView.as_view({'get': 'get'})),
     path('tag/<pk>/', views.TagView.as_view({'get': 'retrieve'})),
     path('', include(router.urls)),

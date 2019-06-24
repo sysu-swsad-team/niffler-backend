@@ -862,6 +862,35 @@ class TaskView(viewsets.ViewSet):
                 p.profile.save()
         
         return HttpResponse("取消成功", status=status.HTTP_200_OK)
+    
+    def claim(self, request, pk):
+        """
+        desc: 举报任务
+        ret: msg
+        err: 404页面/msg
+        input:
+        - name: id
+          desc: 任务id
+          type: string
+          required: true
+          location: path
+        """
+        task = get_object_or_404(Task, pk=pk)
+        user = request.user
+
+        try:
+            assert task.issuer != user, "无法自我举报"
+            assert not task.claimers.filter(pk=user.pk).exists(), \
+                    "无法重复举报"
+            assert task.status == 'QUOTA FULL' or \
+                    task.status == 'UNDERWAY', \
+                    "非进行中的任务"
+        except AssertionError as msg:
+            return HttpResponse(msg, status=status.HTTP_200_OK)
+
+        # add claimers
+        task.claimers.add(user)
+        return HttpResponse("举报成功", status=status.HTTP_200_OK)
 
     # def update(self, request, pk=None):
     # 
