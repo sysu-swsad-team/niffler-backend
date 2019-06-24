@@ -118,7 +118,8 @@ class Signup(APIView):
           required: true
           location: form
         """
-        req = request.data
+        # req = request.data
+        req = json.loads(request.body)
 
         first_name = req.get('name')
         stuId = req.get('stuId')
@@ -129,7 +130,7 @@ class Signup(APIView):
         email = req.get('email')
         password = req.get('password')
         verification_code = req.get('code')
-
+        print(email)
         try:
             # profile = Profile.objects.get(verification_code=verification_code)
             emailverify = EmailVerify.objects.get(email=email)
@@ -143,28 +144,41 @@ class Signup(APIView):
             if timezone.now() > emailverify.code_expires: 
                 emailverify.delete()
                 response_data = {
-                    "msg" : "验证码过期"
+                    "msg" : "验证码过期，请重新获取"
                 }
                 return HttpResponse(json.dumps(response_data), status=status.HTTP_201_CREATED)
 
             else:
-                new_user = User.objects.create(
-                    username=email,
-                    email=email,
-                    first_name=first_name
-                )
-                new_user.set_password(password)
-                new_user.save()
+                try:
+                    new_user = User.objects.create(
+                        username=email,
+                        email=email,
+                        first_name=first_name
+                    )
+                    new_user.set_password(password)
+                    new_user.save()
+                except:
+                    response_data = {
+                        "msg" : "此用户已经注册或邮箱和姓名格式不对"
+                    }
+                    return HttpResponse(json.dumps(response_data), status=status.HTTP_201_CREATED)
 
-                profile = Profile.objects.create(
-                    user=new_user,
-                    balance=0,
-                    stuId=stuId,
-                    birth=birth,
-                    sex=sex,
-                    grade=grade,
-                    major=major
-                )
+                try:
+                    profile = Profile.objects.create(
+                        user=new_user,
+                        balance=0,
+                        stuId=stuId,
+                        birth=birth,
+                        sex=sex,
+                        grade=grade,
+                        major=major
+                    )
+                except:
+                    new_user.delete()
+                    response_data = {
+                        "msg" : "用户 profile 字段格式不对"
+                    }
+                    return HttpResponse(json.dumps(response_data), status=status.HTTP_201_CREATED)
 
                 emailverify.delete()
                 response_data = {
@@ -454,7 +468,7 @@ class UserAvatar(APIView):
     
     def get(self, request):
         """
-        desc: 用户获取头像
+        desc: 获取当前用户头像
         ret: image
         err: 404页面
         """
@@ -515,7 +529,7 @@ class ProfileView(viewsets.ViewSet):
     
     def get(self, request):
         """
-        desc: 获取用户资料
+        desc: 获取当前用户资料
         ret: 用户资料
         err: 404页面
         """
@@ -547,7 +561,7 @@ class TaskView(viewsets.ViewSet):
     
     def retrieve(self, request, pk):
         """
-        desc: 检索任务
+        desc: 获取指定任务
         ret: 任务
         err: 404页面
         input:
@@ -563,7 +577,7 @@ class TaskView(viewsets.ViewSet):
 
     def get(self, request):
         """
-        desc: 检索任务
+        desc: 检索所有任务
         ret: 任务列表
         input:
         - name: type
@@ -589,7 +603,7 @@ class TaskView(viewsets.ViewSet):
         """
         # maybe need pagination
         
-        # print(self.request.user)
+        print(self.request.GET)
         queryset = Task.objects.all().order_by('created_date')
         
         # 问卷 or 跑腿
@@ -849,7 +863,7 @@ class TagView(viewsets.ViewSet):
     
     def retrieve(self, request, pk):
         """
-        desc: 获取标签
+        desc: 获取指定标签
         ret: 标签
         err: 404页面
         input:
