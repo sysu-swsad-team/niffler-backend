@@ -297,10 +297,9 @@ class Signup(APIView):
                                                         verification_code
             
             # 三个参数：第一个为文本内容，第二个 plain 设置文本格式，第三个 utf-8 设置编码
-            # message = MIMEText(text_content, 'html', 'utf-8')
-            # message['Subject'] = Header(email_subject, 'utf-8')
+            message = MIMEText(text_content, 'plain', 'utf-8')
+            message['Subject'] = Header(email_subject, 'utf-8')
 
-            
             # Create the plain-text and HTML version of your message
             # text = """\
             # Hi,
