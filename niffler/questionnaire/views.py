@@ -971,7 +971,7 @@ class ParticipantshipView(viewsets.ViewSet):
 
     def create(self, request):
         """
-        desc: 参与任务
+        desc: 参与任务，系统暂扣报酬
         ret: msg
         err: msg
         input:
@@ -1048,6 +1048,47 @@ class ParticipantshipView(viewsets.ViewSet):
         }
         return HttpResponse(json.dumps(response_data),
                             status=status.HTTP_200_OK)
+    
+    def cancel(self, request, pk):
+        """
+        desc: 取消参与，系统退回任务发布者报酬
+        ret: msg
+        err: 404页面/msg
+        input:
+        - name: id
+          desc: 参与id
+          type: string
+          required: true
+          location: path
+        """
+        participantship = get_object_or_404(Participantship, pk=pk)
+        user = request.user
+
+        try:
+            assert participantship.user == user, "当前用户非参与者"
+            assert task.status == 'UNDERWAY', "无法取消非进行中的参与"
+        except AssertionError as msg:
+            response_data = {
+                "msg" : str(msg)
+            }
+            return HttpResponse(json.dumps(response_data),
+                                    status=status.HTTP_200_OK)
+
+        # modify participantship status
+        participantship._status = 'CANCELLED'
+        participantship.save()
+
+        # refund issuer fee
+        if participantship.task.fee:
+            participantship.task.issuer.profile.balance += \
+                                        participantship.task.fee
+            participantship.task.issuer.profile.save()
+        
+        response_data = {
+            "msg" : "取消成功"
+        }
+        return HttpResponse(json.dumps(response_data),
+                                status=status.HTTP_200_OK)
         
 
 
