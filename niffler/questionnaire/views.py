@@ -139,7 +139,8 @@ class Signup(APIView):
                 "msg" : "未为此邮箱生成验证码"
             }
             return HttpResponse(json.dumps(response_data), status=status.HTTP_201_CREATED)
-        
+        print(verification_code)
+        print(emailverify.verification_code)
         if emailverify.verification_code == verification_code:
             if timezone.now() > emailverify.code_expires: 
                 emailverify.delete()
@@ -250,11 +251,19 @@ class Signup(APIView):
                 #     is_active=False
                 # )
             except:
-                response_data = {
-                    "msg" : "已经发送验证码此邮箱中"
-                }
-                return HttpResponse(json.dumps(response_data), 
-                                    status=status.HTTP_201_CREATED)
+                new_emailverify = EmailVerify.objects.get(email=email)
+                if timezone.now() < new_emailverify.code_expires: 
+                    response_data = {
+                        "msg" : "已经发送验证码此邮箱中，请1分钟后重新发送"
+                    }
+                    return HttpResponse(json.dumps(response_data), 
+                                        status=status.HTTP_201_CREATED)
+                else:
+                    response_data = {
+                        "msg" : "已经重新发送验证码到此邮箱中"
+                    }
+                    pass 
+
 
             ''' 随机生成6位的验证码 '''
             code_list = []
@@ -270,7 +279,7 @@ class Signup(APIView):
 
             new_emailverify.verification_code = verification_code
             new_emailverify.code_expires=datetime.strftime(
-                datetime.now() + timedelta(days=2), "%Y-%m-%d %H:%M:%S")
+                datetime.now() + timedelta(minutes=1), "%Y-%m-%d %H:%M:%S")
             new_emailverify.save()
             # profile = Profile.objects.create(
             #     user=new_user,
@@ -857,3 +866,7 @@ class TagViewSet(viewsets.ModelViewSet):
     serializer_class = TagSerializer
 
 # def UserLogin():
+
+# class EmailVerifyViewSet(viewsets.ModelViewSet):
+#     queryset = EmailVerify.objects.all()
+#     serializer_class = EmailVerifySerializer

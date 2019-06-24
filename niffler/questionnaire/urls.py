@@ -10,6 +10,7 @@ router = routers.DefaultRouter()
 # router.register('profile', views.ProfileViewSet)
 router.register('Participantship', views.ParticipantshipViewSet)
 router.register('tag', views.TagViewSet)
+# router.register('emailverify', views.EmailVerifyViewSet)
 
 # Create your views here.
 # from rest_framework_swagger.views import get_swagger_view

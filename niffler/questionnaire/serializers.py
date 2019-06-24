@@ -3,6 +3,13 @@ from rest_framework import serializers
 from .models import *
 # 序列化器定义 API 表示。
 
+# class EmailVerifySerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = EmailVerify
+#         # Tuple of serialized model fields (see link [2])
+#         fields = '__all__'
+#         # fields = ( "id", "username", "password", "email")
+
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
