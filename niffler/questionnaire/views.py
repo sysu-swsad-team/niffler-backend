@@ -45,7 +45,7 @@ from .swagger_schema import CustomSchema
 
 # handle datetime
 import dateutil.parser
-import datetime
+# import datetime
 from django.utils import timezone
 import pytz
 
@@ -182,8 +182,8 @@ class Signup(APIView):
                         grade=grade,
                         major=major
                     )
-                    profile.avatar = ImageFile(open("avatar/default.jpg", "rb"))  
-                    profile.save()
+                    # profile.avatar = ImageFile(open("avatar/default.jpg", "rb"))  
+                    # profile.save()
                 except:
                     new_user.delete()
                     response_data = {
@@ -249,7 +249,7 @@ class Signup(APIView):
         """
         email = request.query_params.get('email', None)
         
-        print(email)
+        # print(email)
         if email is not None and email is not '':
             try:
                 new_emailverify = EmailVerify.objects.create(
@@ -541,7 +541,7 @@ class UserAvatar(APIView):
                 "msg" : "未登录"
             }
             return HttpResponse(json.dumps(response_data), 
-                                status=status.HTTP_404_NOT_FOUND)
+                                status=status.HTTP_201_CREATED)
         try:
             with open(avatar.url, "rb") as f:
                 return HttpResponse(f.read(),
@@ -630,15 +630,17 @@ class TaskView(viewsets.ViewSet):
           location: path
         """
         response_data = {}
-        response_data['questionnaire'] = ''
         try:
             task = Task.objects.get(pk=pk)
             task_serialized = TaskSerializer(task)
+            response_data['code'] = 200
             response_data['msg'] = '查询成功'
             response_data['questionnaire'] = task_serialized.data
             return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
         except:
+            response_data['code'] = 201
             response_data['msg'] = '查询失败'
+            response_data['questionnaire'] = ''
             return HttpResponse(json.dumps(response_data), status=status.HTTP_201_CREATED)
 
        
@@ -669,7 +671,7 @@ class TaskView(viewsets.ViewSet):
           location: query
         """
         # maybe need pagination
-        
+
         queryset = Task.objects.all().order_by('created_date')
         
         # 问卷 or 跑腿
@@ -808,7 +810,7 @@ class TaskView(viewsets.ViewSet):
                       if form.get('maxNumber', None) else None
         except:
             response_data = {
-                "code" : status.HTTP_400_BAD_REQUEST,
+                "code" : status.HTTP_201_CREATED,
                 "msg" : "金额与参与名额必须为数字"
             }
             return HttpResponse(json.dumps(response_data), 
@@ -889,7 +891,15 @@ class TaskView(viewsets.ViewSet):
           required: true
           location: path
         """
-        task = get_object_or_404(Task, pk=pk)
+        try:
+            task = Task.objects.get(pk=pk)
+        except:
+            response_data = {
+                "msg" : "查无此 task"
+            }
+            return HttpResponse(json.dumps(response_data),
+                                    status=status.HTTP_201_CREATED)
+
         user = request.user
 
         try:
@@ -932,7 +942,15 @@ class TaskView(viewsets.ViewSet):
           required: true
           location: path
         """
-        task = get_object_or_404(Task, pk=pk)
+        try:
+            task = Task.objects.get(pk=pk)
+        except:
+            response_data = {
+                "msg" : "查无此 task"
+            }
+            return HttpResponse(json.dumps(response_data),
+                                    status=status.HTTP_201_CREATED)
+
         user = request.user
 
         try:
@@ -952,6 +970,7 @@ class TaskView(viewsets.ViewSet):
 
         # add claimers
         task.claimers.add(user)
+        task.save()
         
         response_data = {
             "msg" : "举报成功"
@@ -1005,14 +1024,15 @@ class ParticipantshipView(viewsets.ViewSet):
           required: true
           location: path
         """
-        response_data = {}
         try:
             participantship_serialized = ParticipantshipSerializer(
                                             Participantship.objects.get(pk=pk))
             return HttpResponse(json.dumps(participantship_serialized.data), 
                                 status=status.HTTP_200_OK)
         except:
-            response_data['msg'] = '查询失败'
+            response_data = {
+                "msg" : "查询失败"
+            } 
             return HttpResponse(json.dumps(response_data), status=status.HTTP_201_CREATED)
 
     def create(self, request):
@@ -1038,7 +1058,8 @@ class ParticipantshipView(viewsets.ViewSet):
           location: form
         """
         user = request.user
-        form = request.data
+        # form = request.data
+        form = json.loads(request.body)
 
         try:
             task_id = form.get('task_id', None)
@@ -1109,7 +1130,16 @@ class ParticipantshipView(viewsets.ViewSet):
           required: true
           location: path
         """
-        participantship = get_object_or_404(Participantship, pk=pk)
+        # participantship = get_object_or_404(Participantship, pk=pk)
+        try:
+            participantship = Participantship.objects.get(pk=pk)
+        except:
+            response_data = {
+                "msg" : "查无此 participantship"
+            }
+            return HttpResponse(json.dumps(response_data),
+                                    status=status.HTTP_201_CREATED)
+
         user = request.user
 
         try:
@@ -1150,7 +1180,16 @@ class ParticipantshipView(viewsets.ViewSet):
           required: true
           location: path
         """
-        participantship = get_object_or_404(Participantship, pk=pk)
+        # participantship = get_object_or_404(Participantship, pk=pk)
+        try:
+            participantship = Participantship.objects.get(pk=pk)
+        except:
+            response_data = {
+                "msg" : "查无此 participantship"
+            }
+            return HttpResponse(json.dumps(response_data),
+                                    status=status.HTTP_201_CREATED)
+                                    
         user = request.user
 
         try:
@@ -1202,7 +1241,8 @@ class ParticipantshipView(viewsets.ViewSet):
           location: form
         """
         user = request.user
-        form = request.data
+        # form = request.data
+        form = json.loads(request.body)
         
         try:
             participantship_id = form.get('participantship_id', None)
@@ -1215,7 +1255,7 @@ class ParticipantshipView(viewsets.ViewSet):
                                 status=status.HTTP_201_CREATED)
 
         try:
-            assert participantship.task.issuer == user, "当前用户非发起者"
+            assert participantship.task.issuer != user, "当前用户非发起者"
             assert participantship.status == 'CONFIRMED', \
                                               "只能评价已确认但未评价的参与"
             comment = form.get('comment', '')
