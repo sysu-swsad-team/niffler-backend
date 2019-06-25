@@ -71,7 +71,8 @@ class TaskSerializer(serializers.ModelSerializer):
 class ParticipantshipSerializer(serializers.ModelSerializer):
     class Meta:
         model = Participantship
-        fields = '__all__'
+        fields = ('user', 'task', 'participanted_date', 'description', 'poll',
+                  'confirmed_date', 'rate', 'comment', 'status')
 
 # class TagSerializer(serializers.HyperlinkedModelSerializer):
 class TagSerializer(serializers.ModelSerializer):
