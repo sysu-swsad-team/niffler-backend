@@ -178,7 +178,7 @@ class Signup(APIView):
                         grade=grade,
                         major=major
                     )
-                    profile.avatar = ImageFile(open("avatar/0.jpg", "rb"))  
+                    profile.avatar = ImageFile(open("avatar/default.jpg", "rb"))  
                     profile.save()
                 except:
                     new_user.delete()
@@ -242,7 +242,7 @@ class Signup(APIView):
           desc: 邮箱
           type: string
           required: true
-          location: path
+          location: query
         """
         email = request.query_params.get('email', None)
         
