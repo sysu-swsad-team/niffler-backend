@@ -25,6 +25,7 @@ from rest_framework import status
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 from django.core.mail import send_mail
+from django.core.files.images import ImageFile
 from django.utils.crypto import get_random_string
 from django.utils import timezone
 
@@ -177,6 +178,8 @@ class Signup(APIView):
                         grade=grade,
                         major=major
                     )
+                    profile.avatar = ImageFile(open("avatar/0.jpg", "rb"))  
+                    profile.save()
                 except:
                     new_user.delete()
                     response_data = {
@@ -235,14 +238,15 @@ class Signup(APIView):
         ret: code, msg
         err: code, msg
         input:
-        - email: email
+        - name: email
           desc: 邮箱
           type: string
           required: true
           location: path
         """
-        email = request.GET['email']
-        # print(email)  
+        email = request.query_params.get('email', None)
+        
+        print(email)
         if email is not None and email is not '':
             try:
                 new_emailverify = EmailVerify.objects.create(
@@ -773,7 +777,7 @@ class TaskView(viewsets.ViewSet):
         if fee:
             if not participant_quota:
                 response_data = {
-                    "code" : status.HTTP_400_BAD_REQUEST,
+                        "code" : status.HTTP_400_BAD_REQUEST,
                     "msg" : "设定金额时必须同时设定参与名额"
                 }
                 return HttpResponse(json.dumps(response_data), 
