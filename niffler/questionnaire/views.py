@@ -27,7 +27,6 @@ from django.db.models.signals import post_save
 from django.core.mail import send_mail
 from django.core.files.images import ImageFile
 from django.utils.crypto import get_random_string
-from django.utils import timezone
 
 import json
 import os, smtplib, ssl
@@ -43,6 +42,12 @@ import random
 
 from rest_framework.decorators import api_view
 from .swagger_schema import CustomSchema
+
+# handle datetime
+import dateutil.parser
+import datetime
+from django.utils import timezone
+import pytz
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
 
@@ -713,7 +718,7 @@ class TaskView(viewsets.ViewSet):
           required: false
           location: form
         - name: dueDate
-          desc: 参与截止日期
+          desc: 参与截止时间
           type: string
           required: false
           location: form
@@ -760,6 +765,27 @@ class TaskView(viewsets.ViewSet):
         
         description = form.get('description', '')
         due_date = form.get('dueDate', None)
+        
+        if due_date:
+            try:
+                # suppose front-end only uses Chinese timezone
+                # convert it to UTC
+                due_date = dateutil.parser.parse(due_date[:25]).replace(
+                    tzinfo=pytz.utc) - datetime.timedelta(hours=8)
+            except:
+                response_data = {
+                    "msg" : "参与截止时间格式错误，正确示例：\'Mon Jun 10 2019 00:00:00\'"
+                }
+                return HttpResponse(json.dumps(response_data), 
+                                    status=status.HTTP_200_OK)
+            if due_date - datetime.timedelta(minutes=30) < timezone.now():
+                response_data = {
+                    "msg" : "参与截止时间至少为30分钟之后"
+                }
+                return HttpResponse(json.dumps(response_data), 
+                                    status=status.HTTP_200_OK)
+        else:
+            due_date = None
 
         try:
             fee = int(form.get('fee', None)) \
