@@ -30,15 +30,17 @@ urlpatterns = [
                                          })),
     path('task/cancel/<pk>/', views.TaskView.as_view({'post': 'cancel'})),
     path('task/claim/<pk>/', views.TaskView.as_view({'post': 'claim'})),
-    path('participantship/<pk>/', 
-         views.ParticipantshipView.as_view({'get': 'retrieve'})),
-    path('participantship/', views.ParticipantshipView.as_view(
-                                                    {'post': 'create'})),
     path('participantship/cancel/<pk>/',
          views.ParticipantshipView.as_view({'post': 'cancel'})),
     path('participantship/confirm/<pk>/',
          views.ParticipantshipView.as_view({'post': 'confirm'})),
-    path('tag/', views.TagView.as_view({'get': 'get'})),
+    path('participantship/comment/',
+         views.ParticipantshipView.as_view({'post': 'comment'})),
+    path('participantship/<pk>/', 
+         views.ParticipantshipView.as_view({'get': 'retrieve'})),
+    path('participantship/', views.ParticipantshipView.as_view(
+                                                    {'post': 'create'})),
     path('tag/<pk>/', views.TagView.as_view({'get': 'retrieve'})),
+    path('tag/', views.TagView.as_view({'get': 'get'})),
     path('', include(router.urls)),
 ]

@@ -584,12 +584,12 @@ class ProfileView(viewsets.ViewSet):
           required: true
           location: path
         """
-#         try:
-        profile_serialized = ProfileSerializer(User.objects.get(pk=pk).profile)
-        return HttpResponse(json.dumps(profile_serialized.data), 
-                            status=status.HTTP_200_OK)
-#         except:
-#             return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+        try:
+            profile_serialized = ProfileSerializer(User.objects.get(pk=pk).profile)
+            return HttpResponse(json.dumps(profile_serialized.data), 
+                                status=status.HTTP_200_OK)
+        except:
+            return HttpResponse(status=status.HTTP_404_NOT_FOUND)
     
     def get(self, request):
         """
@@ -1166,6 +1166,74 @@ class ParticipantshipView(viewsets.ViewSet):
         
         response_data = {
             "msg" : "确认成功，系统已交纳参与者报酬"
+        }
+        return HttpResponse(json.dumps(response_data),
+                                status=status.HTTP_200_OK)
+    
+    def comment(self, request):
+        """
+        desc: 发起者评价参与
+        ret: msg
+        err: msg
+        input:
+        - name: participantship_id
+          desc: 参与id
+          type: string
+          required: true
+          location: form
+        - name: rate
+          desc: 评分
+          type: integer
+          required: false
+          location: form
+        - name: comment
+          desc: 评价内容
+          type: string
+          required: true
+          location: form
+        """
+        user = request.user
+        form = request.data
+        
+        try:
+            participantship_id = form.get('participantship_id', None)
+            participantship = Participantship.objects.get(pk=participantship_id)
+        except:
+            response_data = {
+                "msg" : "参与不存在"
+            }
+            return HttpResponse(json.dumps(response_data),
+                                status=status.HTTP_200_OK)
+
+        try:
+            assert participantship.task.issuer == user, "当前用户非发起者"
+            assert participantship.status == 'CONFIRMED', \
+                                              "只能评价已确认但未评价的参与"
+            comment = form.get('comment', '')
+            assert comment, "评价内容不能为空"
+        except AssertionError as msg:
+            response_data = {
+                "msg" : str(msg)
+            }
+            return HttpResponse(json.dumps(response_data),
+                                    status=status.HTTP_200_OK)
+        
+        try:
+            rate = form.get('rate', None)
+            rate = int(rate) if rate else None
+        except:
+            response_data = {
+                "msg" : "评分必须为数字"
+            }
+            return HttpResponse(json.dumps(response_data), 
+                                status=status.HTTP_200_OK)
+
+        participantship.rate = rate
+        participantship.comment = comment
+        participantship.save()
+        
+        response_data = {
+            "msg" : "评价成功"
         }
         return HttpResponse(json.dumps(response_data),
                                 status=status.HTTP_200_OK)
