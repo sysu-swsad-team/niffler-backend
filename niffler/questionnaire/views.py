@@ -445,7 +445,6 @@ class Login(APIView):
             profile_serialized = ProfileSerializer(user.profile)
 
             response_data = {
-                "code" : 200,
                 "msg" : "登录成功",
                 # "user" : user_serialized.data,
                 "email" : user.email,
@@ -456,12 +455,11 @@ class Login(APIView):
                                 status=status.HTTP_200_OK)
         else:
             response_data = {
-                "code" : 500,
                 "msg" : "用户名（邮箱名）或密码不正确",
                 "profile" : None
             }
             return HttpResponse(json.dumps(response_data), 
-                                status=status.HTTP_200_OK)
+                                status=status.HTTP_201_CREATED)
 
 
 @api_view()
@@ -516,11 +514,10 @@ class UserAvatar(APIView):
             profile.save()
         except:
             response_data = {
-                "code" : status.HTTP_400_BAD_REQUEST,
                 "msg" : "未登录或文件错误"
             }
             return HttpResponse(json.dumps(response_data),
-                                status=status.HTTP_200_OK)
+                                status=status.HTTP_201_CREATED)
 
         response_data = {
             "msg" : "头像更新成功",
@@ -541,7 +538,6 @@ class UserAvatar(APIView):
             avatar = profile.avatar
         except:
             response_data = {
-                "code" : status.HTTP_404_NOT_FOUND,
                 "msg" : "未登录"
             }
             return HttpResponse(json.dumps(response_data), 
@@ -768,11 +764,10 @@ class TaskView(viewsets.ViewSet):
             assert title, "标题不能为空"
         except AssertionError as msg:
             response_data = {
-                "code" : status.HTTP_400_BAD_REQUEST,
                 "msg" : str(msg)
             }
             return HttpResponse(json.dumps(response_data),
-                                    status=status.HTTP_200_OK)
+                                    status=status.HTTP_201_CREATED)
         
         description = form.get('description', '')
         due_date = form.get('dueDate', None)
@@ -788,13 +783,13 @@ class TaskView(viewsets.ViewSet):
                     "msg" : "参与截止时间格式错误，正确示例：\'Mon Jun 10 2019 00:00:00\'"
                 }
                 return HttpResponse(json.dumps(response_data), 
-                                    status=status.HTTP_200_OK)
+                                    status=status.HTTP_201_CREATED)
             if due_date - datetime.timedelta(minutes=30) < timezone.now():
                 response_data = {
                     "msg" : "参与截止时间至少为30分钟之后"
                 }
                 return HttpResponse(json.dumps(response_data), 
-                                    status=status.HTTP_200_OK)
+                                    status=status.HTTP_201_CREATED)
         else:
             due_date = None
 
@@ -809,34 +804,31 @@ class TaskView(viewsets.ViewSet):
                 "msg" : "金额与参与名额必须为数字"
             }
             return HttpResponse(json.dumps(response_data), 
-                                status=status.HTTP_200_OK)
+                                status=status.HTTP_201_CREATED)
 
         if fee:
             if not participant_quota:
                 response_data = {
-                        "code" : status.HTTP_400_BAD_REQUEST,
                     "msg" : "设定金额时必须同时设定参与名额"
                 }
                 return HttpResponse(json.dumps(response_data), 
-                                        status=status.HTTP_200_OK)
+                                        status=status.HTTP_201_CREATED)
             if available_balance < fee * participant_quota:
                 response_data = {
-                    "code" : status.HTTP_400_BAD_REQUEST,
                     "msg" : "可用余额不足"
                 }
                 return HttpResponse(json.dumps(response_data), 
-                                        status=status.HTTP_200_OK)
+                                        status=status.HTTP_201_CREATED)
 
         tag_set = form.get('tagSet', None) # maybe also need check
         try:
             assert(tag_set == None or isinstance(tag_set, list))
         except:
             response_data = {
-                "code" : status.HTTP_400_BAD_REQUEST,
                 "msg" : "标签必须为空或数组"
             }
             return HttpResponse(json.dumps(response_data), 
-                                status=status.HTTP_200_OK)
+                                status=status.HTTP_201_CREATED)
 
 
         if task_type == '问卷':
@@ -866,14 +858,12 @@ class TaskView(viewsets.ViewSet):
                     tag_obj.tasks.add(task)
         except:
             response_data = {
-                "code" : status.HTTP_500_INTERNAL_SERVER_ERROR,
                 "msg" : "发布失败，字段异常"
             }
             return HttpResponse(json.dumps(response_data), 
-                                status=status.HTTP_200_OK)
+                                status=status.HTTP_201_CREATED)
 
         response_data = {
-            "code" : status.HTTP_200_OK,
             "msg" : "发布成功"
         }
         return HttpResponse(json.dumps(response_data), 
@@ -904,7 +894,7 @@ class TaskView(viewsets.ViewSet):
                 "msg" : str(msg)
             }
             return HttpResponse(json.dumps(response_data),
-                                    status=status.HTTP_200_OK)
+                                    status=status.HTTP_201_CREATED)
 
         # modify task status
         task.cancelled = True
@@ -950,7 +940,7 @@ class TaskView(viewsets.ViewSet):
                 "msg" : str(msg)
             }
             return HttpResponse(json.dumps(response_data),
-                                    status=status.HTTP_200_OK)
+                                    status=status.HTTP_201_CREATED)
 
         # add claimers
         task.claimers.add(user)
@@ -1068,7 +1058,7 @@ class ParticipantshipView(viewsets.ViewSet):
                 "msg" : str(msg)
             }
             return HttpResponse(json.dumps(response_data),
-                                status=status.HTTP_200_OK)
+                                status=status.HTTP_201_CREATED)
 
         description = form.get('description', '')
         poll = form.get('poll', '')
@@ -1091,7 +1081,7 @@ class ParticipantshipView(viewsets.ViewSet):
                 "msg" : "参与失败，字段异常"
             }
             return HttpResponse(json.dumps(response_data),
-                                status=status.HTTP_200_OK)
+                                status=status.HTTP_201_CREATED)
 
         response_data = {
             "msg" : "参与成功，系统暂扣报酬"
@@ -1122,7 +1112,7 @@ class ParticipantshipView(viewsets.ViewSet):
                 "msg" : str(msg)
             }
             return HttpResponse(json.dumps(response_data),
-                                    status=status.HTTP_200_OK)
+                                    status=status.HTTP_201_CREATED)
 
         # modify participantship status
         participantship._status = 'CANCELLED'
@@ -1163,7 +1153,7 @@ class ParticipantshipView(viewsets.ViewSet):
                 "msg" : str(msg)
             }
             return HttpResponse(json.dumps(response_data),
-                                    status=status.HTTP_200_OK)
+                                    status=status.HTTP_201_CREATED)
 
         # modify participantship status
         participantship._status = 'CONFIRMED'
@@ -1214,7 +1204,7 @@ class ParticipantshipView(viewsets.ViewSet):
                 "msg" : "参与不存在"
             }
             return HttpResponse(json.dumps(response_data),
-                                status=status.HTTP_200_OK)
+                                status=status.HTTP_201_CREATED)
 
         try:
             assert participantship.task.issuer == user, "当前用户非发起者"
@@ -1227,7 +1217,7 @@ class ParticipantshipView(viewsets.ViewSet):
                 "msg" : str(msg)
             }
             return HttpResponse(json.dumps(response_data),
-                                    status=status.HTTP_200_OK)
+                                    status=status.HTTP_201_CREATED)
         
         try:
             rate = form.get('rate', None)
@@ -1237,7 +1227,7 @@ class ParticipantshipView(viewsets.ViewSet):
                 "msg" : "评分必须为数字"
             }
             return HttpResponse(json.dumps(response_data), 
-                                status=status.HTTP_200_OK)
+                                status=status.HTTP_201_CREATED)
 
         participantship.rate = rate
         participantship.comment = comment
