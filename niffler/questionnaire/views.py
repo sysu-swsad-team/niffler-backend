@@ -25,6 +25,7 @@ from rest_framework import status
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 from django.core.mail import send_mail
+from django.core.files.images import ImageFile
 from django.utils.crypto import get_random_string
 
 import json
@@ -126,7 +127,7 @@ class Signup(APIView):
           required: true
           location: form
         """
-        # req = request.data
+        
         req = json.loads(request.body)
 
         first_name = req.get('name')
@@ -182,6 +183,8 @@ class Signup(APIView):
                         grade=grade,
                         major=major
                     )
+                    profile.avatar = ImageFile(open("avatar/0.jpg", "rb"))  
+                    profile.save()
                 except:
                     new_user.delete()
                     response_data = {
@@ -240,14 +243,15 @@ class Signup(APIView):
         ret: code, msg
         err: code, msg
         input:
-        - email: email
+        - name: email
           desc: 邮箱
           type: string
           required: true
           location: path
         """
-        email = request.GET['email']
-        # print(email)  
+        email = request.query_params.get('email', None)
+        
+        print(email)
         if email is not None and email is not '':
             try:
                 new_emailverify = EmailVerify.objects.create(
@@ -428,7 +432,7 @@ class Login(APIView):
           required: true
           location: form
         """
-        req = request.data
+        req = json.loads(request.body)
         # logic to check username/password
         # username = request.POST.get('email')
         # password = request.POST.get('password')   
@@ -659,7 +663,6 @@ class TaskView(viewsets.ViewSet):
         """
         # maybe need pagination
         
-        print(self.request.GET)
         queryset = Task.objects.all().order_by('created_date')
         
         # 问卷 or 跑腿
@@ -689,6 +692,7 @@ class TaskView(viewsets.ViewSet):
         filtered = queryset
         
         task_serialized = TaskSerializer(filtered, many=True)
+
         return HttpResponse(json.dumps(task_serialized.data), 
                             status=status.HTTP_200_OK)
 
@@ -740,7 +744,7 @@ class TaskView(viewsets.ViewSet):
           location: form
         """
         user = request.user
-        form = request.data
+        form = json.loads(request.body)
         available_balance = user.profile.available_balance
         
         # belows auto checked by models
@@ -799,7 +803,7 @@ class TaskView(viewsets.ViewSet):
         if fee:
             if not participant_quota:
                 response_data = {
-                    "code" : status.HTTP_400_BAD_REQUEST,
+                        "code" : status.HTTP_400_BAD_REQUEST,
                     "msg" : "设定金额时必须同时设定参与名额"
                 }
                 return HttpResponse(json.dumps(response_data), 
@@ -1022,7 +1026,7 @@ class ParticipantshipView(viewsets.ViewSet):
           location: form
         """
         user = request.user
-        form = request.data
+        form = json.loads(request.body)
 
         try:
             task_id = form.get('task_id', None)
