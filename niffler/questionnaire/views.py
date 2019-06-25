@@ -583,12 +583,12 @@ class ProfileView(viewsets.ViewSet):
           required: true
           location: path
         """
-        try:
-            profile_serialized = ProfileSerializer(User.objects.get(pk=pk).profile)
-            return HttpResponse(json.dumps(profile_serialized.data), 
-                                status=status.HTTP_200_OK)
-        except:
-            return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+#         try:
+        profile_serialized = ProfileSerializer(User.objects.get(pk=pk).profile)
+        return HttpResponse(json.dumps(profile_serialized.data), 
+                            status=status.HTTP_200_OK)
+#         except:
+#             return HttpResponse(status=status.HTTP_404_NOT_FOUND)
     
     def get(self, request):
         """
@@ -1026,7 +1026,7 @@ class ParticipantshipView(viewsets.ViewSet):
           location: form
         """
         user = request.user
-        form = json.loads(request.body)
+        form = request.data
 
         try:
             task_id = form.get('task_id', None)
