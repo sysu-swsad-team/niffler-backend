@@ -620,7 +620,7 @@ class TaskView(viewsets.ViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
     schema = CustomSchema()
-    
+
     def retrieve(self, request, pk):
         """
         desc: 获取指定任务
@@ -633,10 +633,19 @@ class TaskView(viewsets.ViewSet):
           required: true
           location: path
         """
-        task = get_object_or_404(Task, pk=pk)
-        task_serialized = TaskSerializer(task)
-        return HttpResponse(json.dumps(task_serialized.data), status=status.HTTP_200_OK)
+        response_data = {}
+        response_data['questionnaire'] = ''
+        try:
+            task = Task.objects.get(pk=pk)
+            task_serialized = TaskSerializer(task)
+            response_data['msg'] = '查询成功'
+            response_data['questionnaire'] = task_serialized.data
+            return HttpResponse(json.dumps(response_data), status=status.HTTP_200_OK)
+        except:
+            response_data['msg'] = '查询失败'
+            return HttpResponse(json.dumps(response_data), status=status.HTTP_201_CREATED)
 
+       
     def get(self, request):
         """
         desc: 检索所有任务
@@ -864,11 +873,11 @@ class TaskView(viewsets.ViewSet):
                                 status=status.HTTP_200_OK)
 
         response_data = {
-            "code" : status.HTTP_201_CREATED,
+            "code" : status.HTTP_200_OK,
             "msg" : "发布成功"
         }
         return HttpResponse(json.dumps(response_data), 
-                                status=status.HTTP_201_CREATED)
+                                status=status.HTTP_200_OK)
     
     def cancel(self, request, pk):
         """
@@ -998,13 +1007,15 @@ class ParticipantshipView(viewsets.ViewSet):
           required: true
           location: path
         """
+        response_data = {}
         try:
             participantship_serialized = ParticipantshipSerializer(
                                             Participantship.objects.get(pk=pk))
             return HttpResponse(json.dumps(participantship_serialized.data), 
                                 status=status.HTTP_200_OK)
         except:
-            return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+            response_data['msg'] = '查询失败'
+            return HttpResponse(json.dumps(response_data), status=status.HTTP_201_CREATED)
 
     def create(self, request):
         """
@@ -1039,7 +1050,7 @@ class ParticipantshipView(viewsets.ViewSet):
                 "msg" : "任务不存在"
             }
             return HttpResponse(json.dumps(response_data),
-                                status=status.HTTP_200_OK)
+                                status=status.HTTP_201_CREATED)
 
         task_status = task.status
 
