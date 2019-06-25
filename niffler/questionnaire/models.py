@@ -153,7 +153,7 @@ class Task(models.Model):
 
     @property
     def issuer_first_name(self):
-      return self.issuer.first_name
+        return self.issuer.first_name
 
 
 PARTICIPANTSHIP_STATUS = [
@@ -187,6 +187,7 @@ class Participantship(models.Model):
         return 'UNDERWAY'
 
 
+# maybe useless
 class Tag(models.Model):
     name = models.CharField(max_length=150)
     users = models.ManyToManyField(User, blank=True)
