@@ -74,7 +74,6 @@ class Signup(APIView):
     schema = CustomSchema()
     response_data = {}
 
-    @csrf_exempt 
     def post(self, request, format=None):
         """
         desc: 用户注册
@@ -236,7 +235,6 @@ class Signup(APIView):
         #     }
         #     return HttpResponse(json.dumps(response_data), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-    @csrf_exempt 
     def get(self, request, format=None):
         """
         desc: 邮箱验证
@@ -495,6 +493,8 @@ class GetImage(APIView):
             return HttpResponse(status=status.HTTP_404_NOT_FOUND)
 
 class UserAvatar(APIView):
+    authentication_classes = (CsrfExemptSessionAuthentication,)
+
     schema = CustomSchema()
     
     def post(self, request, format=None):
@@ -568,7 +568,8 @@ class UserAvatar(APIView):
 
 
 class ProfileView(viewsets.ViewSet):
-    
+    authentication_classes = (CsrfExemptSessionAuthentication,)
+
     schema = CustomSchema()
     
     def retrieve(self, request, pk):
@@ -614,6 +615,7 @@ class ProfileView(viewsets.ViewSet):
 class TaskView(viewsets.ViewSet):
     # authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
     # permission_classes = (IsAuthenticated,)
+    authentication_classes = (CsrfExemptSessionAuthentication,)
 
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
@@ -976,7 +978,8 @@ class TaskView(viewsets.ViewSet):
 
     
 class ParticipantshipView(viewsets.ViewSet):
-    
+    authentication_classes = (CsrfExemptSessionAuthentication,)
+
     queryset = Participantship.objects.all()
     serializer_class = ParticipantshipSerializer
     schema = CustomSchema()
@@ -1175,7 +1178,8 @@ class ParticipantshipView(viewsets.ViewSet):
 
 
 class TagView(viewsets.ViewSet):
-    
+    authentication_classes = (CsrfExemptSessionAuthentication,)
+
     schema = CustomSchema()
     
     def retrieve(self, request, pk):
