@@ -680,6 +680,14 @@ class TaskView(viewsets.ViewSet):
         if mine is not None and mine is not '' \
                             and mine.lower() != 'false':
             user = request.user
+            
+            if not user.id: # invalid for anonymous user
+                response_data = {
+                    "msg" : "未登录"
+                }
+                return HttpResponse(json.dumps(response_data), 
+                                    status=status.HTTP_201_CREATED)
+            
             queryset = queryset.filter(Q(issuer=user) | Q(participants=user))
 
         if task_type is not None and task_type is not '':
