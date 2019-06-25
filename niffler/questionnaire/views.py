@@ -742,13 +742,17 @@ class TaskView(viewsets.ViewSet):
         task_type = form.get('taskType', None)
         title = form.get('title', None)
         
-        if not title:
+        try:
+            assert task_type == "问卷" or task_type == "跑腿", \
+                    "任务类型必须为“问卷”或“跑腿”"
+            assert title, "标题不能为空"
+        except AssertionError as msg:
             response_data = {
                 "code" : status.HTTP_400_BAD_REQUEST,
-                "msg" : "标题不能为空"
+                "msg" : str(msg)
             }
-            return HttpResponse(json.dumps(response_data), 
-                                status=status.HTTP_200_OK)
+            return HttpResponse(json.dumps(response_data),
+                                    status=status.HTTP_200_OK)
         
         description = form.get('description', '')
         due_date = form.get('dueDate', None)
@@ -872,7 +876,7 @@ class TaskView(viewsets.ViewSet):
                 p.profile.save()
         
         response_data = {
-            "msg" : "取消成功"
+            "msg" : "取消成功，进行中的参与者得到报酬"
         }
         return HttpResponse(json.dumps(response_data),
                                 status=status.HTTP_200_OK)
@@ -1007,12 +1011,14 @@ class ParticipantshipView(viewsets.ViewSet):
         task_status = task.status
 
         try:
-            assert task_status != 'INVALID', "问卷存在争议"
-            assert task_status != 'CANCELLED', "问卷被发布者取消"
-            assert task_status != 'CLOSED', "问卷已经过截至日期"
-            assert task_status != 'QUOTA FULL', "问卷参与人数已满"
+            assert task_status != 'INVALID', "任务被举报次数过多"
+            assert task_status != 'CANCELLED', "任务被发布者取消"
+            assert task_status != 'CLOSED', "任务已经过截至日期"
+            assert task_status != 'QUOTA FULL', "任务参与人数已满"
             assert user.id, "未登录"
             assert task.issuer != user, "无法自我参与"
+            assert not task.participants.filter(pk=user.pk).exists(), \
+                                                            "无法重复参与"
         except AssertionError as msg:
             response_data = {
                 "msg" : str(msg)
@@ -1022,7 +1028,8 @@ class ParticipantshipView(viewsets.ViewSet):
 
         description = form.get('description', '')
         poll = form.get('poll', '')
-        comment = ''
+        if task.task_type=='跑腿':
+            poll = ''
 
         try:
             Participantship.objects.create(
@@ -1030,7 +1037,6 @@ class ParticipantshipView(viewsets.ViewSet):
                 task=task,
                 description=description,
                 poll=poll,
-                comment=comment
             )
             # task issuer's balance is deducted 1 * fee
             if task.fee:
@@ -1038,13 +1044,13 @@ class ParticipantshipView(viewsets.ViewSet):
                 task.issuer.profile.save()
         except:
             response_data = {
-                "msg" : "参与失败"
+                "msg" : "参与失败，字段异常"
             }
             return HttpResponse(json.dumps(response_data),
                                 status=status.HTTP_200_OK)
 
         response_data = {
-            "msg" : "参与成功"
+            "msg" : "参与成功，系统暂扣报酬"
         }
         return HttpResponse(json.dumps(response_data),
                             status=status.HTTP_200_OK)
@@ -1066,7 +1072,7 @@ class ParticipantshipView(viewsets.ViewSet):
 
         try:
             assert participantship.user == user, "当前用户非参与者"
-            assert task.status == 'UNDERWAY', "无法取消非进行中的参与"
+            assert participantship.status == 'UNDERWAY', "无法取消非进行中的参与"
         except AssertionError as msg:
             response_data = {
                 "msg" : str(msg)
@@ -1085,7 +1091,48 @@ class ParticipantshipView(viewsets.ViewSet):
             participantship.task.issuer.profile.save()
         
         response_data = {
-            "msg" : "取消成功"
+            "msg" : "取消成功，系统已退回任务发布者报酬"
+        }
+        return HttpResponse(json.dumps(response_data),
+                                status=status.HTTP_200_OK)
+    
+    def confirm(self, request, pk):
+        """
+        desc: 发起者确认参与，系统交纳参与者报酬
+        ret: msg
+        err: 404页面/msg
+        input:
+        - name: id
+          desc: 参与id
+          type: string
+          required: true
+          location: path
+        """
+        participantship = get_object_or_404(Participantship, pk=pk)
+        user = request.user
+
+        try:
+            assert participantship.task.issuer == user, "当前用户非发起者"
+            assert participantship.status == 'UNDERWAY', "无法确认非进行中的参与"
+        except AssertionError as msg:
+            response_data = {
+                "msg" : str(msg)
+            }
+            return HttpResponse(json.dumps(response_data),
+                                    status=status.HTTP_200_OK)
+
+        # modify participantship status
+        participantship._status = 'CONFIRMED'
+        participantship.save()
+
+        # pay participant fee
+        if participantship.task.fee:
+            participantship.user.profile.balance += \
+                                        participantship.task.fee
+            participantship.user.profile.save()
+        
+        response_data = {
+            "msg" : "确认成功，系统已交纳参与者报酬"
         }
         return HttpResponse(json.dumps(response_data),
                                 status=status.HTTP_200_OK)
