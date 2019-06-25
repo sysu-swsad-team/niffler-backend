@@ -121,7 +121,7 @@ class Signup(APIView):
           required: true
           location: form
         """
-        # req = request.data
+        
         req = json.loads(request.body)
 
         first_name = req.get('name')
@@ -423,7 +423,7 @@ class Login(APIView):
           required: true
           location: form
         """
-        req = request.data
+        req = json.loads(request.body)
         # logic to check username/password
         # username = request.POST.get('email')
         # password = request.POST.get('password')   
@@ -654,7 +654,6 @@ class TaskView(viewsets.ViewSet):
         """
         # maybe need pagination
         
-        print(self.request.GET)
         queryset = Task.objects.all().order_by('created_date')
         
         # 问卷 or 跑腿
@@ -684,6 +683,7 @@ class TaskView(viewsets.ViewSet):
         filtered = queryset
         
         task_serialized = TaskSerializer(filtered, many=True)
+
         return HttpResponse(json.dumps(task_serialized.data), 
                             status=status.HTTP_200_OK)
 
@@ -735,7 +735,7 @@ class TaskView(viewsets.ViewSet):
           location: form
         """
         user = request.user
-        form = request.data
+        form = json.loads(request.body)
         available_balance = user.profile.available_balance
         
         # belows auto checked by models
@@ -996,7 +996,7 @@ class ParticipantshipView(viewsets.ViewSet):
           location: form
         """
         user = request.user
-        form = request.data
+        form = json.loads(request.body)
 
         try:
             task_id = form.get('task_id', None)
