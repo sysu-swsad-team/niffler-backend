@@ -662,8 +662,13 @@ class TaskView(viewsets.ViewSet):
           type: string
           required: false
           location: query
-        - name: mine
-          desc: 不为空时表示用户发表或参与
+        - name: asIssuer
+          desc: 不为空时表示用户发表
+          type: boolean
+          required: false
+          location: query
+        - name: asParticipant
+          desc: 不为空时表示用户参与
           type: boolean
           required: false
           location: query
@@ -685,10 +690,13 @@ class TaskView(viewsets.ViewSet):
         # 问卷 or 跑腿
         task_type = request.query_params.get('type', None)
         # 用户 or 所有
-        mine = request.query_params.get('mine', None)
+        asIssuer = request.query_params.get('asIssuer', None)
+        asParticipant = request.query_params.get('asParticipant', None)
+        
+        asIssuer = asIssuer and asIssuer.lower() != 'false'
+        asParticipant = asParticipant and asParticipant.lower() != 'false'
 
-        if mine is not None and mine is not '' \
-                            and mine.lower() != 'false':
+        if asIssuer or asParticipant:
             user = request.user
             
             if not user.id: # invalid for anonymous user
@@ -698,7 +706,12 @@ class TaskView(viewsets.ViewSet):
                 return HttpResponse(json.dumps(response_data), 
                                     status=status.HTTP_201_CREATED)
             
-            queryset = queryset.filter(Q(issuer=user) | Q(participants=user))
+            if asIssuer and asParticipant:
+                queryset = queryset.filter(Q(issuer=user) | Q(participants=user))
+            elif asIssuer:
+                queryset = queryset.filter(Q(issuer=user))
+            else:
+                queryset = queryset.filter(Q(participants=user))
 
         if task_type is not None and task_type is not '':
             queryset = queryset.filter(task_type=task_type)
