@@ -831,14 +831,14 @@ class TaskView(viewsets.ViewSet):
                 # suppose front-end only uses Chinese timezone
                 # convert it to UTC
                 due_date = dateutil.parser.parse(due_date[:25]).replace(
-                    tzinfo=pytz.utc) - datetime.timedelta(hours=8)
+                    tzinfo=pytz.utc) - timedelta(hours=8)
             except:
                 response_data = {
                     "msg" : "参与截止时间格式错误，正确示例：\'Mon Jun 10 2019 00:00:00\'"
                 }
                 return HttpResponse(json.dumps(response_data), 
                                     status=status.HTTP_201_CREATED)
-            if due_date - datetime.timedelta(minutes=30) < timezone.now():
+            if due_date - timedelta(minutes=30) < timezone.now():
                 response_data = {
                     "msg" : "参与截止时间至少为30分钟之后"
                 }
@@ -875,8 +875,6 @@ class TaskView(viewsets.ViewSet):
                                         status=status.HTTP_201_CREATED)
 
         tag_set = form.get('tagSet', None)
-        if tag_set:
-            tag_set = tag_set.strip()
         try:
             assert(tag_set == None or isinstance(tag_set, list))
         except:
@@ -907,11 +905,13 @@ class TaskView(viewsets.ViewSet):
 
             if tag_set:
                 for tag_name in tag_set:
-                    if Tag.objects.filter(name=tag_name).exists():
-                        tag_obj = Tag.objects.get(name=tag_name)
-                    else:
-                        tag_obj = Tag.objects.create(name=tag_name)
-                    tag_obj.tasks.add(task)
+                    if tag_name and tag_name.strip():
+                        tag_name = tag_name.strip()
+                        if Tag.objects.filter(name=tag_name).exists():
+                            tag_obj = Tag.objects.get(name=tag_name)
+                        else:
+                            tag_obj = Tag.objects.create(name=tag_name)
+                        tag_obj.tasks.add(task)
         except:
             response_data = {
                 "msg" : "发布失败，字段异常"
