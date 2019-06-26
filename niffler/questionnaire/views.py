@@ -971,11 +971,12 @@ class TaskView(viewsets.ViewSet):
         task.cancelled = True
         task.save()
 
-        # pay participants fee
+        # pay underway participants fee
         if task.fee:
-            for p in task.participants.all():
-                p.profile.balance += task.fee
-                p.profile.save()
+            for p in task.participantship_set.all():
+                if p.status == 'UNDERWAY':
+                    p.user.profile.balance += task.fee
+                    p.user.profile.save()
         
         response_data = {
             "msg" : "取消成功，进行中的参与者得到报酬"
