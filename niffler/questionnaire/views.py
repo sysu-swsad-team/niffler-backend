@@ -129,13 +129,13 @@ class Signup(APIView):
         
         req = json.loads(request.body)
 
-        first_name = req.get('name')
-        stuId = req.get('stuId')
-        birth = req.get('birth')
-        sex = req.get('sex')
-        grade = req.get('grade')
-        major = req.get('major')
-        email = req.get('email')
+        first_name = req.get('name').strip()
+        stuId = req.get('stuId').strip()
+        birth = req.get('birth').strip()
+        sex = req.get('sex').strip()
+        grade = req.get('grade').strip()
+        major = req.get('major').strip()
+        email = req.get('email').strip()
         password = req.get('password')
         verification_code = req.get('code')
         # print(email)
@@ -434,7 +434,7 @@ class Login(APIView):
         # logic to check username/password
         # username = request.POST.get('email')
         # password = request.POST.get('password')   
-        email = req.get('email')
+        email = req.get('email').strip()
         password = req.get('password')
 
         user = authenticate(username=email, password=password)  #用户验证
@@ -689,9 +689,15 @@ class TaskView(viewsets.ViewSet):
         
         # 问卷 or 跑腿
         task_type = request.query_params.get('type', None)
+        if task_type:
+            task_type = task_type.strip()
         # 用户 or 所有
         asIssuer = request.query_params.get('asIssuer', None)
+        if asIssuer:
+            asIssuer = asIssuer.strip()
         asParticipant = request.query_params.get('asParticipant', None)
+        if asParticipant:
+            asParticipant = asParticipant.strip()
         
         asIssuer = asIssuer and asIssuer.lower() != 'false'
         asParticipant = asParticipant and asParticipant.lower() != 'false'
@@ -713,16 +719,20 @@ class TaskView(viewsets.ViewSet):
             else:
                 queryset = queryset.filter(Q(participants=user))
 
-        if task_type is not None and task_type is not '':
+        if task_type:
             queryset = queryset.filter(task_type=task_type)
 
         title = request.query_params.get('title', None)
+        if title:
+            title = title.strip()
         issuer_first_name = request.query_params.get('issuer', None)
+        if issuer_first_name:
+            issuer_first_name = issuer_first_name.strip()
 
-        if title is not None and title is not '':
+        if title:
             queryset = queryset.filter(title__icontains=title)
         
-        if issuer_first_name is not None and issuer_first_name is not '':
+        if issuer_first_name:
             userset = User.objects.filter(first_name__icontains=issuer_first_name)
             queryset = queryset.filter(issuer__in=userset)
 
@@ -793,7 +803,11 @@ class TaskView(viewsets.ViewSet):
         
         # belows auto checked by models
         task_type = form.get('taskType', None)
+        if task_type:
+            task_type = task_type.strip()
         title = form.get('title', None)
+        if title:
+            title = title.strip()
         
         try:
             assert task_type == "问卷" or task_type == "跑腿", \
@@ -807,9 +821,12 @@ class TaskView(viewsets.ViewSet):
                                     status=status.HTTP_201_CREATED)
         
         description = form.get('description', '')
+        if description:
+            description = description.strip()
         due_date = form.get('dueDate', None)
         
         if due_date:
+            due_date = due_date.strip()
             try:
                 # suppose front-end only uses Chinese timezone
                 # convert it to UTC
@@ -857,7 +874,9 @@ class TaskView(viewsets.ViewSet):
                 return HttpResponse(json.dumps(response_data), 
                                         status=status.HTTP_201_CREATED)
 
-        tag_set = form.get('tagSet', None) # maybe also need check
+        tag_set = form.get('tagSet', None)
+        if tag_set:
+            tag_set = tag_set.strip()
         try:
             assert(tag_set == None or isinstance(tag_set, list))
         except:
@@ -1124,6 +1143,8 @@ class ParticipantshipView(viewsets.ViewSet):
                                 status=status.HTTP_201_CREATED)
 
         description = form.get('description', '')
+        if description:
+            description = description.strip()
         poll = form.get('poll', '')
         if task.task_type=='跑腿':
             poll = ''
@@ -1312,7 +1333,10 @@ class ParticipantshipView(viewsets.ViewSet):
             assert participantship.status == 'CONFIRMED', \
                                               "只能评价已确认但未评价的参与"
             comment = form.get('comment', '')
+            if comment:
+                comment = comment.strip()
             assert comment, "评价内容不能为空"
+
         except AssertionError as msg:
             response_data = {
                 "msg" : str(msg)
