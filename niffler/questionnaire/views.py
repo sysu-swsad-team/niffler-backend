@@ -593,8 +593,16 @@ class ProfileView(viewsets.ViewSet):
         ret: 用户资料
         err: 404页面
         """
+        user = request.user
+        if user.is_authenticated == False:
+            response_data = {
+                "msg" : '未登录'
+            }
+            return HttpResponse(json.dumps(response_data),
+                                status=status.HTTP_201_CREATED)
+
         try:
-            profile_serialized = ProfileSerializer(request.user.profile)
+            profile_serialized = ProfileSerializer(user.profile)
             return HttpResponse(json.dumps(profile_serialized.data), 
                                 status=status.HTTP_200_OK)
         except:
@@ -762,6 +770,12 @@ class TaskView(viewsets.ViewSet):
         """
         user = request.user
         form = json.loads(request.body)
+        if user.is_authenticated == False:
+            response_data = {
+                "msg" : '未登录'
+            }
+            return HttpResponse(json.dumps(response_data),
+                                status=status.HTTP_201_CREATED)
         available_balance = user.profile.available_balance
         
         # belows auto checked by models
@@ -901,6 +915,13 @@ class TaskView(viewsets.ViewSet):
                                     status=status.HTTP_201_CREATED)
 
         user = request.user
+
+        if user.is_authenticated == False:
+            response_data = {
+                "msg" : '未登录'
+            }
+            return HttpResponse(json.dumps(response_data),
+                                status=status.HTTP_201_CREATED)
 
         try:
             assert task.issuer == user, "当前用户非发布者"
@@ -1141,6 +1162,12 @@ class ParticipantshipView(viewsets.ViewSet):
                                     status=status.HTTP_201_CREATED)
 
         user = request.user
+        if user.is_authenticated == False:
+            response_data = {
+                "msg" : '未登录'
+            }
+            return HttpResponse(json.dumps(response_data),
+                                status=status.HTTP_201_CREATED)
 
         try:
             assert participantship.user == user, "当前用户非参与者"
@@ -1191,7 +1218,13 @@ class ParticipantshipView(viewsets.ViewSet):
                                     status=status.HTTP_201_CREATED)
                                     
         user = request.user
-
+        if user.is_authenticated == False:
+            response_data = {
+                "msg" : '未登录'
+            }
+            return HttpResponse(json.dumps(response_data),
+                                status=status.HTTP_201_CREATED)
+                                
         try:
             assert participantship.task.issuer == user, "当前用户非发起者"
             assert participantship.status == 'UNDERWAY', "无法确认非进行中的参与"
@@ -1244,6 +1277,13 @@ class ParticipantshipView(viewsets.ViewSet):
         # form = request.data
         form = json.loads(request.body)
         
+        if user.is_authenticated == False:
+            response_data = {
+                "msg" : '未登录'
+            }
+            return HttpResponse(json.dumps(response_data),
+                                status=status.HTTP_201_CREATED)
+                                
         try:
             participantship_id = form.get('participantship_id', None)
             participantship = Participantship.objects.get(pk=participantship_id)
