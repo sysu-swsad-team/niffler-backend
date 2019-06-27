@@ -90,7 +90,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware', # 注意顺序
 ]
 
-ALIPAY_APPID = 
+ALIPAY_APPID = 111111
 ALIPAY_DEBUG = False
 ALIPAY_URL = 'https://openapi.alipaydev.com/gateway.do'
 

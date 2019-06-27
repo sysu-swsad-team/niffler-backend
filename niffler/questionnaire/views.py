@@ -65,8 +65,14 @@ class PaymentView(APIView):
     def get(self, request):
         """
         desc: 充值
-        ret: 支付链接
+        ret: redirect to "支付链接"
         err: code, msg
+        input:
+        - name: amount
+          desc: 充值金额
+          type: string
+          required: true
+          location: query
         """
         user = request.user
         amount = request.query_params.get('amount', None)
@@ -101,7 +107,7 @@ class PaymentView(APIView):
             out_trade_no=20190627,  # 订单编号
             total_amount=0.01,   # 订单总金额，在数据库中是 Decimal 类型，需要转换
             subject="测试订单：闲钱币充值",    # 订单标题，可以自己指定
-            return_url="127.0.0.1:8080",  # 支付成功回调url
+            return_url="http://127.0.0.1:8000/payment/status/",  # 支付成功回调url
             notify_url=None     # 可选
         )
 
@@ -123,57 +129,75 @@ class PaymentStatusView(APIView):
     def put(self, request):
         """
         desc: 保存支付结果
-        ret: 支付链接
+        ret: code, msg, profile
         err: code, msg
         """
-    # 获取查询字符串数据
-    # out_trade_no: 订单号，    trade_no: 交易流水编号
-    # total_amount: 订单总金额   seller_id: 支付宝唯一用户编号
-    alipay_request_dict = request.query_params  # query_params是一个QueryDict对象
+        # 获取查询字符串数据
+        # out_trade_no: 订单号，    trade_no: 交易流水编号
+        # total_amount: 订单总金额   seller_id: 支付宝唯一用户编号
+        alipay_request_dict = request.query_params  # query_params是一个QueryDict对象
 
-    # 如果查询字符串为空，表示前端没有将支付宝回调时携带的参数传递过来
-    if not alipay_request_dict:
-        return Response({"message": "缺少参数"}, status=status.HTTP_400_BAD_REQUEST)
+        # 如果查询字符串为空，表示前端没有将支付宝回调时携带的参数传递过来
+        if not alipay_request_dict:
+            response_data = {
+                "msg" : '缺少支付成功返回的参数'
+            }
+            return HttpResponse(json.dumps(response_data),
+                                status=status.HTTP_201_CREATED)
 
-    # 将QueryDict转换成python中的字典
-    data = alipay_request_dict.dict()
-    # 用pop方法取出签名，接口文档中推荐使用的方法
-    sign = data.pop("sign")
+        # 将QueryDict转换成python中的字典
+        data = alipay_request_dict.dict()
+        # 用pop方法取出签名，接口文档中推荐使用的方法
+        sign = data.pop("sign")
 
-    # 校验参数，使用AliPay模块来验证前端传过来的数据是否真的是支付宝在回调时携带的参数
-    alipay_client = AliPay(
-        appid=settings.ALIPAY_APPID,    # 沙箱账号的APPID
-        app_notify_url=None,  # 默认回调url
-        app_private_key_path=os.path.join(os.path.dirname(os.path.abspath(__file__)), "keys/app_private_key.pem"),
-        alipay_public_key_path=os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                            "keys/alipay_public_key.pem"),  # 支付宝的公钥，验证支付宝回传消息使用，不是你自己的公钥,
-        sign_type="RSA2",  # RSA 或者 RSA2
-        debug=settings.ALIPAY_DEBUG  # 默认False，是否是沙箱环境
-    )
-
-    # verify函数返回验证结果，True 或 False
-    result = alipay_client.verify(data, sign)
-    if result:
-        # 保存支付结果数据
-        # out_trade_no: 订单号，    trade_no: 交易流水号
-        # total_amount: 订单总金额   seller_id: 支付宝唯一用户号
-
-        order_id = data.get("out_trade_no")     # 订单编号
-        trade_id = data.get("trade_no")         # 交易流水号
-        # 将付款记录写入数据库
-        Payment.objects.create(
-            order_id=order_id,
-            trade_id=trade_id,
+        # 校验参数，使用AliPay模块来验证前端传过来的数据是否真的是支付宝在回调时携带的参数
+        alipay_client = AliPay(
+            appid=settings.ALIPAY_APPID,    # 沙箱账号的APPID
+            app_notify_url=None,  # 默认回调url
+            app_private_key_path=os.path.join(os.path.dirname(os.path.abspath(__file__)), "keys/app_private_key.pem"),
+            alipay_public_key_path=os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                                "keys/alipay_public_key.pem"),  # 支付宝的公钥，验证支付宝回传消息使用，不是你自己的公钥,
+            sign_type="RSA2",  # RSA 或者 RSA2
+            debug=settings.ALIPAY_DEBUG  # 默认False，是否是沙箱环境
         )
 
-        # 修改订单状态
-        OrderInfo.objects.filter(order_id=order_id).update(status=OrderInfo.ORDER_STATUS_ENUM["UNSEND"])
+        # verify函数返回验证结果，True 或 False
+        result = alipay_client.verify(data, sign)
+        if result:
+            # 获得支付结果数据
 
-        # 返回 trade_id（交易流水号）
-        return Response({"trade_id": trade_id})
-    else:
-        # 返回参数错误
-        return Response({"message": "参数错误"}, status=status.HTTP_400_BAD_REQUEST)
+            order_id = data.get("out_trade_no")     # 订单编号
+            trade_id = data.get("trade_no")         # 交易流水号
+            total_amount = data.get("total_amount") # 订单总金额
+            seller_id = data.get("seller_id") # 支付宝唯一用户号
+
+            user = request.user
+            if user.is_authenticated == False:
+                response_data = {
+                    "msg" : '未登录'
+                }
+                return HttpResponse(json.dumps(response_data),
+                                    status=status.HTTP_201_CREATED)
+                                    
+            profile = user.profile
+            profile.balance += total_amount
+            profile.save()
+
+            # 返回 profile
+            response_data = {
+                "msg" : '充值成功',
+                "profile" : ProfileSerializer(profile).data
+            }
+            return HttpResponse(json.dumps(response_data),
+                                status=status.HTTP_200_OK)
+        else:
+            # 返回参数错误
+            response_data = {
+                "msg" : '参数错误'
+            }
+            return HttpResponse(json.dumps(response_data),
+                                status=status.HTTP_201_CREATED)
+
 
 # class UserFilter(django_filters.rest_framework.FilterSet):
 #     class Meta:
