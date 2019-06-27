@@ -646,6 +646,8 @@ class ProfileView(viewsets.ViewSet):
           location: form
         """
         user = request.user
+        profile = user.profile
+
         if user.is_authenticated == False:
             response_data = {
                 "msg" : '未登录'
@@ -654,38 +656,70 @@ class ProfileView(viewsets.ViewSet):
                                 status=status.HTTP_201_CREATED) 
 
         req = json.loads(request.body)
-        first_name = req.get('first_name').strip()
-        stuId = req.get('stuId').strip()
-        birth = req.get('birth').strip()
-        sex = req.get('sex').strip()
-        grade = req.get('grade').strip()
-        major = req.get('major').strip()
+        first_name = req.get('first_name')
+        if first_name:
+            first_name.strip()
+            user.first_name = first_name
+            user.save()
+
+        stuId = req.get('stuId')
+        if stuId:
+            stuId.strip()
+            profile.stuId = stuId
+
+        birth = req.get('birth')
+        if birth:
+            birth.strip()
+            profile.birth = birth
+        
+        sex = req.get('sex')
+        if sex:
+            sex.strip()
+            try:
+                assert sex == '男' or sex == '女', "性别必须为‘男’或‘女’"
+            except AssertionError as msg:
+                response_data = {
+                    "msg" : str(msg)
+                }
+                return HttpResponse(json.dumps(response_data),
+                                        status=status.HTTP_201_CREATED)
+            profile.sex = sex
+
+        grade = req.get('grade')
+        if grade:
+            grade.strip()
+            try:
+                assert grade == '大一' or \
+                    grade == '大二' or \
+                    grade == '大三' or \
+                    grade == '大四', "年级错误"
+            except AssertionError as msg:
+                response_data = {
+                    "msg" : str(msg)
+                }
+                return HttpResponse(json.dumps(response_data),
+                                        status=status.HTTP_201_CREATED)
+            profile.grade = grade
+
+        major = req.get('major')
+        if major:
+            major.strip()
+            profile.major = major 
+
         # old_password = req.get('old_password').strip()
         # new_password = req.get('new_password').strip()
-        try:
-            assert sex == '男' or sex == '女', "性别必须为‘男’或‘女’"
-            assert grade == '大一' or \
-                   grade == '大二' or \
-                   grade == '大三' or \
-                   grade == '大四', "年级错误"
+        # try:
             # assert old_password != new_password, "密码修改前后一样"
-        except AssertionError as msg:
-            response_data = {
-                "msg" : str(msg)
-            }
-            return HttpResponse(json.dumps(response_data),
-                                    status=status.HTTP_201_CREATED)
+        # except AssertionError as msg:
+        #     response_data = {
+        #         "msg" : str(msg)
+        #     }
+        #     return HttpResponse(json.dumps(response_data),
+        #                             status=status.HTTP_201_CREATED)
 
-        user.first_name = first_name
         # user.set_password(new_password)
-        user.save()
-        
-        profile = user.profile
-        profile.stuId = stuId
-        profile.birth = birth
-        profile.sex = sex
-        profile.grade = grade
-        profile.major = major 
+        # user.save()
+
         profile.save()
 
         response_data = {
