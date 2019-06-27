@@ -66,6 +66,11 @@ class TaskSerializer(serializers.ModelSerializer):
     def get_participants(self, obj):
         return list(obj.participants.values_list('id', 'first_name'))
     
+    participantship_set = serializers.SerializerMethodField()
+    def get_participantship_set(self, obj):
+        return [{'userName': p.user.first_name, 'answer': p.poll} \
+                for p in obj.participantship_set.iterator()]
+    
     class Meta:
         model = Task
         fields = ('id', 'title', 'description', 'tag_set', 'poll', 'issuer', 
