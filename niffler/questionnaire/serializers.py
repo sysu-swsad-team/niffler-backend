@@ -58,6 +58,10 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 
 class TaskSerializer(serializers.ModelSerializer):
+    participants = serializers.SerializerMethodField()
+    def get_participants(self, obj):
+        return list(obj.participants.values_list('id', 'first_name'))
+    
     class Meta:
         model = Task
         fields = ('id', 'title', 'description', 'tag_set', 'poll', 'issuer', 
