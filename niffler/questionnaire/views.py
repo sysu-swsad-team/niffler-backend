@@ -76,7 +76,7 @@ class PaymentView(APIView):
         """
         user = request.user
         amount = request.query_params.get('amount', None)
-
+        
         if user.is_authenticated == False:
             response_data = {
                 "msg" : '未登录'
@@ -478,6 +478,9 @@ class Signup(APIView):
             # 三个参数：第一个为文本内容，第二个 plain 设置文本格式，第三个 utf-8 设置编码
             message = MIMEText(text_content, 'plain', 'utf-8')
             message['Subject'] = Header(email_subject, 'utf-8')
+            message['From'] = settings.DEFAULT_FROM_EMAIL
+            message['To'] = settings.DEFAULT_FROM_EMAIL
+            message['Cc'] = email
 
             # Create the plain-text and HTML version of your message
             # text = """\
@@ -519,7 +522,7 @@ class Signup(APIView):
                 with smtplib.SMTP_SSL(settings.EMAIL_HOST, settings.EMAIL_PORT, context=context) as server:
                     server.login(settings.DEFAULT_FROM_EMAIL, settings.EMAIL_HOST_PASSWORD)
                     # TODO: Send email here
-                    server.sendmail(settings.DEFAULT_FROM_EMAIL, [email], message.as_string())
+                    server.sendmail(settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_FROM_EMAIL] + [email], message.as_string())
             except Exception as e:
                 print(e)
                 response_data = {
@@ -608,7 +611,6 @@ class Login(APIView):
         # password = request.POST.get('password')   
         email = req.get('email').strip()
         password = req.get('password')
-
         user = authenticate(username=email, password=password)  #用户验证
         if user:
             login(request, user)  #用户登录
