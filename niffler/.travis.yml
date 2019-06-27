@@ -1,0 +1,17 @@
+language: python
+
+python:
+ - "3.7"
+
+env:
+ - DJANGO=2.1.7
+
+install:
+ - pip install -r requirements.txt
+
+script:
+ - python manage.py test questionnaire
+
+branches:
+  only:
+   - master
