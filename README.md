@@ -24,7 +24,9 @@ python manage.py flush
 ```bash
 python manage.py runserver
 ```
-Open http://127.0.0.1:8000/questionnaire/，成功则返回 {}
+Open http://127.0.0.1:8000/questionnaire/
+
+成功则返回 {}
 
 ## API Docs
 
