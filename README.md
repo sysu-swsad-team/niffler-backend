@@ -24,7 +24,7 @@ python manage.py flush
 ```bash
 python manage.py runserver
 ```
-Open http://127.0.0.1:8000/questionnaire/
+Open http://127.0.0.1:8000/questionnaire/，成功则返回 {}
 
 ## API Docs
 
@@ -32,7 +32,7 @@ Open http://127.0.0.1:8000/questionnaire/swagger/
 
 ## Admin Site
 
-创建超级用户并进入 admin 界面管理某个数据模型
+create a superuser account of admin site so as to manage the data model 
 
 ```bash
 python manage.py createsuperuser 
@@ -51,4 +51,37 @@ python manage.py test
 https://docs.djangoproject.com/zh-hans/2.2/
 
 http://www.iamnancy.top/djangorestframework/Home/
+
+## Project Structure
+
+```bash
+niffler
+    ├── avatar
+    │   └── 1.jpg
+    ├── db.sqlite3
+    ├── log.txt
+    ├── manage.py
+    ├── niffler
+    │   ├── __init__.py
+    │   ├── settings.py
+    │   ├── urls.py
+    │   └── wsgi.py
+    ├── questionnaire
+    │   ├── Untitled.ipynb
+    │   ├── __init__.py
+    │   ├── admin.py
+    │   ├── apps.py
+    │   ├── migrations
+    │   │   ├── 0001_initial.py
+    │   │   ├── 0002_auto_20190625_0042.py
+    │   │   ├── 0003_auto_20190625_0305.py
+    │   │   ├── __init__.py
+    │   ├── models.py
+    │   ├── serializers.py
+    │   ├── swagger_schema.py
+    │   ├── tests.py
+    │   ├── urls.py
+    │   └── views.py
+    └── requirements.txt
+```
 
