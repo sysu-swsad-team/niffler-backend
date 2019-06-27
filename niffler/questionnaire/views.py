@@ -602,12 +602,12 @@ class Login(APIView):
           required: true
           location: form
         """
-        req = json.loads(request.body)
+        # req = json.loads(request.body)
         # logic to check username/password
-        # username = request.POST.get('email')
-        # password = request.POST.get('password')   
-        email = req.get('email').strip()
-        password = req.get('password')
+        email = request.POST.get('email')
+        password = request.POST.get('password')   
+        # email = req.get('email').strip()
+        # password = req.get('password')
 
         user = authenticate(username=email, password=password)  #用户验证
         if user:
