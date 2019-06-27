@@ -1,9 +1,9 @@
 # niffler-backend 后台部署文档
 
-- django rest framework 3.9.2
-- python 3.5-3.7
-
 [![Build Status](https://travis-ci.org/sysu-swsad-team/niffler-backend.svg?branch=master)](https://travis-ci.org/sysu-swsad-team/niffler-backend)
+
+- Django REST framework 3.9.2
+- Python 3.5-3.7
 
 ## Install
 
@@ -28,9 +28,13 @@ Open http://127.0.0.1:8000/questionnaire/
 
 成功则返回 {}
 
+[Demo](http://129.204.53.183:8000/questionnaire/)（2019年7月下旬之前可用）
+
 ## API Docs
 
 Open http://127.0.0.1:8000/questionnaire/swagger/
+
+[Demo](http://129.204.53.183:8000/questionnaire/swagger/)（2019年7月下旬之前可用）
 
 ## Admin Site
 
@@ -41,6 +45,8 @@ python manage.py createsuperuser
 ```
 
 Open http://127.0.0.1:8000/admin/
+
+[Demo](http://129.204.53.183:8000/admin/)（2019年7月下旬之前可用）
 
 ## Unit Test
 
