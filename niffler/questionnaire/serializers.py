@@ -61,7 +61,6 @@ class TaskSerializer(serializers.ModelSerializer):
     tag_set = serializers.SerializerMethodField()
     def get_tag_set(self, obj):
         return list(obj.tag_set.values_list('name'))
-        return list(obj.tag_set.values_list('name')) # just for test
     
     participants = serializers.SerializerMethodField()
     def get_participants(self, obj):

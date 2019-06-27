@@ -7,10 +7,10 @@ env:
  - DJANGO=2.1.7
 
 install:
- - pip install -r requirements.txt
+ - pip install -r niffler/requirements.txt
 
 script:
- - python manage.py test questionnaire
+ - python niffler/manage.py test questionnaire
 
 branches:
   only:
