@@ -24,6 +24,7 @@ urlpatterns = [
     path('register/', views.Signup.as_view()),
     path('login/', views.Login.as_view()),
     path('logout/', views.user_logout),
+    path('payment/',views.PaymentView.as_view()),
     path('avatar/<image>',views.GetImage.as_view()),
     path('avatar/',views.UserAvatar.as_view()),
     path('questionnaire/', include('questionnaire.urls')),

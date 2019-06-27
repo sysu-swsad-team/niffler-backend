@@ -90,6 +90,10 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware', # 注意顺序
 ]
 
+ALIPAY_APPID = 
+ALIPAY_DEBUG = False
+ALIPAY_URL = 'https://openapi.alipaydev.com/gateway.do'
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.163.com'  # 邮箱服务地址 这里是163邮箱的
 EMAIL_PORT = 465  # 端口号
