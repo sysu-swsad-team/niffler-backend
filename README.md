@@ -46,7 +46,7 @@ python manage.py createsuperuser
 
 Open http://127.0.0.1:8000/admin/
 
-[Demo](http://129.204.53.183:8000/questionnaire/admin/)（2019年7月下旬之前可用）
+[Demo](http://129.204.53.183:8000/admin/)（2019年7月下旬之前可用）
 
 ## Unit Test
 
