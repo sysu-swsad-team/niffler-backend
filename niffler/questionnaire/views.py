@@ -107,7 +107,7 @@ class PaymentView(APIView):
             out_trade_no=20190627,  # 订单编号
             total_amount=0.01,   # 订单总金额，在数据库中是 Decimal 类型，需要转换
             subject="测试订单：闲钱币充值",    # 订单标题，可以自己指定
-            return_url="http://127.0.0.1:8000/payment/status/",  # 支付成功回调url
+            return_url="http://127.0.0.1:8080/#/balance",  # 支付成功回调url
             notify_url=None     # 可选
         )
 
@@ -131,6 +131,33 @@ class PaymentStatusView(APIView):
         desc: 保存支付结果
         ret: code, msg, profile
         err: code, msg
+        input:
+        - name: amount
+          desc: 充值金额
+          type: string
+          required: true
+          location: query
+        input:
+        - name: out_trade_no
+          desc: 订单号
+          type: string
+          required: true
+          location: query
+        - name: trade_no
+          desc: 交易流水编号
+          type: string
+          required: true
+          location: query
+        - name: total_amount
+          desc: 充值金额
+          type: string
+          required: true
+          location: query
+        - name: seller_id
+          desc: 支付宝唯一用户编号
+          type: string
+          required: true
+          location: query
         """
         # 获取查询字符串数据
         # out_trade_no: 订单号，    trade_no: 交易流水编号
