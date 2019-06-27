@@ -608,6 +608,61 @@ class ProfileView(viewsets.ViewSet):
         except:
             return HttpResponse(status=status.HTTP_404_NOT_FOUND)
 
+    def post(self, request):
+        """
+        desc: 更改当前用户资料
+        ret: 用户资料
+        err: 404页面
+        """
+        user = request.user
+        if user.is_authenticated == False:
+            response_data = {
+                "msg" : '未登录'
+            }
+            return HttpResponse(json.dumps(response_data),
+                                status=status.HTTP_201_CREATED) 
+
+        req = json.loads(request.body)
+        first_name = req.get('name').strip()
+        stuId = req.get('stuId').strip()
+        birth = req.get('birth').strip()
+        sex = req.get('sex').strip()
+        grade = req.get('grade').strip()
+        major = req.get('major').strip()
+        old_password = req.get('old_password').strip()
+        new_password = req.get('new_password').strip()
+        try:
+            assert sex == '男' or sex == '女', "性别必须为‘男’或‘女’"
+            assert grade == '大一' or \
+                   grade == '大二' or \
+                   grade == '大三' or \
+                   grade == '大四', "年级错误"
+            # assert old_password != new_password, "密码修改前后一样"
+        except AssertionError as msg:
+            response_data = {
+                "msg" : str(msg)
+            }
+            return HttpResponse(json.dumps(response_data),
+                                    status=status.HTTP_201_CREATED)
+
+        user.first_name = first_name
+        user.set_password(new_password)
+        user.save()
+        
+        profile = user.profile
+        profile.stuId = stuId
+        profile.birth = birth
+        profile.sex = sex
+        profile.grade = grade
+        profile.major = major 
+        profile.save()
+
+        response_data = {
+            "msg" : "修改成功",
+            "profile" : ProfileSerializer(profile).data
+        }
+        return HttpResponse(json.dumps(response_data),
+                        status=status.HTTP_200_OK)
 
 # class ProfileViewSet(viewsets.ModelViewSet):
 #     authentication_classes = (SessionAuthentication, BasicAuthentication)
