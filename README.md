@@ -1,9 +1,9 @@
 # niffler-backend 后台部署文档
 
+[![Build Status](https://travis-ci.org/sysu-swsad-team/niffler-backend.svg?branch=master)](https://travis-ci.org/sysu-swsad-team/niffler-backend)
+
 - Django REST framework 3.9.2
 - Python 3.5-3.7
-
-[![Build Status](https://travis-ci.org/sysu-swsad-team/niffler-backend.svg?branch=master)](https://travis-ci.org/sysu-swsad-team/niffler-backend)
 
 ## Install
 
