@@ -1,7 +1,6 @@
 """
 Created by [16340286](https://github.com/Ernie1).
 
-TODO not here:
  * When create task,
    available_balance should be more than fee * participant_quota.
    

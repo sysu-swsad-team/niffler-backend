@@ -1022,15 +1022,16 @@ class TaskView(viewsets.ViewSet):
             return HttpResponse(json.dumps(response_data),
                                     status=status.HTTP_201_CREATED)
 
+        # pay underway participants fee
+        if task.fee:
+            for p in task.participantship_set.all():
+                if p.status == 'UNDERWAY':
+                    p.user.profile.balance += task.fee
+                    p.user.profile.save()
+
         # modify task status
         task.cancelled = True
         task.save()
-
-        # pay participants fee
-        if task.fee:
-            for p in task.participants.all():
-                p.profile.balance += task.fee
-                p.profile.save()
         
         response_data = {
             "msg" : "取消成功，进行中的参与者得到报酬"
@@ -1324,15 +1325,15 @@ class ParticipantshipView(viewsets.ViewSet):
             return HttpResponse(json.dumps(response_data),
                                     status=status.HTTP_201_CREATED)
 
-        # modify participantship status
-        participantship._status = 'CONFIRMED'
-        participantship.save()
-
         # pay participant fee
         if participantship.task.fee:
             participantship.user.profile.balance += \
                                         participantship.task.fee
             participantship.user.profile.save()
+
+        # modify participantship status
+        participantship._status = 'CONFIRMED'
+        participantship.save()
         
         response_data = {
             "msg" : "确认成功，系统已交纳参与者报酬"
