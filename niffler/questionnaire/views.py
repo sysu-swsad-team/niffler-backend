@@ -614,7 +614,7 @@ class ProfileView(viewsets.ViewSet):
         ret: code, msg, profile
         err: code, msg
         input:
-        - name: name
+        - name: first_name
           desc: 姓名
           type: string
           required: false
@@ -654,7 +654,7 @@ class ProfileView(viewsets.ViewSet):
                                 status=status.HTTP_201_CREATED) 
 
         req = json.loads(request.body)
-        first_name = req.get('name').strip()
+        first_name = req.get('first_name').strip()
         stuId = req.get('stuId').strip()
         birth = req.get('birth').strip()
         sex = req.get('sex').strip()
