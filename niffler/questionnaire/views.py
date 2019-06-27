@@ -901,12 +901,12 @@ class TaskView(viewsets.ViewSet):
           type: integer
           required: false
           location: form
-        - name: tagSet
+        - name: tag
           desc: 标签名数组，标签名若不存在会创建
           type: array
           required: false
           location: form
-        - name: question
+        - name: questions
           desc: 问卷，taskType为问卷才有效
           type: string
           required: false
