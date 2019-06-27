@@ -610,9 +610,40 @@ class ProfileView(viewsets.ViewSet):
 
     def post(self, request):
         """
-        desc: 更改当前用户资料
-        ret: 用户资料
-        err: 404页面
+        desc: 修改个人资料
+        ret: code, msg, profile
+        err: code, msg
+        input:
+        - name: name
+          desc: 姓名
+          type: string
+          required: false
+          location: form
+        - name: stuId
+          desc: 学号
+          type: string
+          required: false
+          location: form
+        - name: birth
+          desc: 生日
+          type: string
+          required: false
+          location: form
+        - name: sex
+          desc: “男” 或 “女”
+          type: string
+          required: false
+          location: form
+        - name: grade
+          desc: “大一/二/三/四”
+          type: string
+          required: false
+          location: form
+        - name: major
+          desc: 专业
+          type: string
+          required: false
+          location: form
         """
         user = request.user
         if user.is_authenticated == False:
@@ -629,8 +660,8 @@ class ProfileView(viewsets.ViewSet):
         sex = req.get('sex').strip()
         grade = req.get('grade').strip()
         major = req.get('major').strip()
-        old_password = req.get('old_password').strip()
-        new_password = req.get('new_password').strip()
+        # old_password = req.get('old_password').strip()
+        # new_password = req.get('new_password').strip()
         try:
             assert sex == '男' or sex == '女', "性别必须为‘男’或‘女’"
             assert grade == '大一' or \
@@ -646,7 +677,7 @@ class ProfileView(viewsets.ViewSet):
                                     status=status.HTTP_201_CREATED)
 
         user.first_name = first_name
-        user.set_password(new_password)
+        # user.set_password(new_password)
         user.save()
         
         profile = user.profile
