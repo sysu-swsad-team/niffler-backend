@@ -25,7 +25,7 @@ SESSION_COOKIE_HTTPONLY = False
 SECRET_KEY = 'go0-mo05s3+0j3ie%s^nvkwsx-*ocf(@f%+9e-ii+abact#hf+'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*',]
 
