@@ -58,6 +58,10 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 
 class TaskSerializer(serializers.ModelSerializer):
+    tag_set = serializers.SerializerMethodField()
+    def get_tag_set(self, obj):
+        return list(obj.tag_set.values_list('id', 'name'))
+    
     participants = serializers.SerializerMethodField()
     def get_participants(self, obj):
         return list(obj.participants.values_list('id', 'first_name'))
