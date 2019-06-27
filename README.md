@@ -1,5 +1,7 @@
 # niffler-backend
 
+[![Build Status](https://travis-ci.org/sysu-swsad-team/niffler-backend.svg?branch=master)](https://travis-ci.org/sysu-swsad-team/niffler-backend)
+
 ## Install
 
 ```bash
