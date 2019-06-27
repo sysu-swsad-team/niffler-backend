@@ -656,24 +656,26 @@ class ProfileView(viewsets.ViewSet):
                                 status=status.HTTP_201_CREATED) 
 
         req = json.loads(request.body)
-        first_name = req.get('first_name')
-        if first_name:
+        key = req.get('key')
+
+        if key == 'first_name':
+            first_name = req.get('value')
             first_name.strip()
             user.first_name = first_name
             user.save()
 
-        stuId = req.get('stuId')
-        if stuId:
+        if key == 'stuId':
+            stuId = req.get('value')
             stuId.strip()
             profile.stuId = stuId
 
-        birth = req.get('birth')
-        if birth:
+        if key == 'birth':   
+            birth = req.get('value')
             birth.strip()
             profile.birth = birth
         
-        sex = req.get('sex')
-        if sex:
+        if key == 'sex':
+            sex = req.get('value')
             sex.strip()
             try:
                 assert sex == '男' or sex == '女', "性别必须为‘男’或‘女’"
@@ -685,8 +687,8 @@ class ProfileView(viewsets.ViewSet):
                                         status=status.HTTP_201_CREATED)
             profile.sex = sex
 
-        grade = req.get('grade')
-        if grade:
+        if key == 'grade':
+            grade = req.get('value')
             grade.strip()
             try:
                 assert grade == '大一' or \
@@ -701,8 +703,8 @@ class ProfileView(viewsets.ViewSet):
                                         status=status.HTTP_201_CREATED)
             profile.grade = grade
 
-        major = req.get('major')
-        if major:
+        if key == 'major':
+            major = req.get('value')
             major.strip()
             profile.major = major 
 
@@ -721,7 +723,6 @@ class ProfileView(viewsets.ViewSet):
         # user.save()
 
         profile.save()
-
         response_data = {
             "msg" : "修改成功",
             "profile" : ProfileSerializer(profile).data
