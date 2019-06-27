@@ -995,7 +995,7 @@ class TaskView(viewsets.ViewSet):
                 return HttpResponse(json.dumps(response_data), 
                                         status=status.HTTP_201_CREATED)
 
-        tag_set = form.get('tagSet', None)
+        tag_set = form.get('tag', None)
         try:
             assert(tag_set == None or isinstance(tag_set, list))
         except:
@@ -1007,10 +1007,10 @@ class TaskView(viewsets.ViewSet):
 
 
         if task_type == '问卷':
-            poll = form.get('question', '')
+            poll = form.get('questions', '')
         else:
             poll = ''
-      
+
         try:
             task = Task.objects.create(
                 issuer=user,
