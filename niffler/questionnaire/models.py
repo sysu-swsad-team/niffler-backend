@@ -77,7 +77,7 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     phone = models.CharField(max_length=50, blank=True)
     balance = models.IntegerField(blank=True, default=100)
-    avatar = models.ImageField(upload_to=content_file_name, blank=True)
+    avatar = models.ImageField(upload_to=content_file_name, default='avatar/default.jpg')
     # avatar = models.CharField(max_length=100, default='https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1561038007116&di=36a197a4d42d2fc3d3d1b2d955c65d10&imgtype=0&src=http%3A%2F%2Fimg0.pclady.com.cn%2Fpclady%2Fpet%2Fchoice%2Fcat%2F1503%2F7.jpg')
 
     birth = models.DateField(blank=True, null=True)

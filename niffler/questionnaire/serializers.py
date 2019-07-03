@@ -47,10 +47,6 @@ class ProfileSerializer(serializers.ModelSerializer):
     tag_set = serializers.SerializerMethodField()
     def get_tag_set(self, obj):
         return list(obj.user.tag_set.values_list('id', flat=True))
-    
-    avatar = serializers.SerializerMethodField()
-    def get_avatar(self, obj):
-        return obj.avatar if obj.avatar else 'avatar/default.jpg'
 
     class Meta:
         model = Profile
