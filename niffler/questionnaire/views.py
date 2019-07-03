@@ -347,7 +347,6 @@ class Signup(APIView):
                 try:
                     profile = Profile.objects.create(
                         user=new_user,
-                        balance=0,
                         stuId=stuId,
                         birth=birth,
                         sex=sex,
