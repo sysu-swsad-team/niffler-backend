@@ -722,11 +722,15 @@ class UserAvatar(APIView):
                                     content_type="image/jpeg",
                                     status=status.HTTP_200_OK)
         except IOError: # fail to find file
-            red = Image.new('RGB', (1, 1))
-            response = HttpResponse(content_type="image/jpeg", 
+#             red = Image.new('RGB', (1, 1))
+#             response = HttpResponse(content_type="image/jpeg", 
+#                                     status=status.HTTP_200_OK)
+#             red.save(response, "JPEG")
+#             return response
+            with open('avatar/default.jpg', "rb") as f:
+                return HttpResponse(f.read(),
+                                    content_type="image/jpeg",
                                     status=status.HTTP_200_OK)
-            red.save(response, "JPEG")
-            return response
 
 
 # class GroupViewSet(viewsets.ModelViewSet):
